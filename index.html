@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087f69"><title>HealthCheck — Cek Risiko Diabetes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css"></head><body>
+<div class="shell">
+<aside class="sidebar" id="sidebar">
+<a class="brand" href="#beranda"><span class="brand-icon">✚</span><span><b>HealthCheck</b><small>DIABETES CARE</small></span></a>
+<p class="side-label">MENU UTAMA</p><nav>
+<a class="nav-link active" data-nav="beranda" href="#beranda"><i>⌂</i>Beranda</a>
+<a class="nav-link" data-nav="cek" href="#cek"><i>✚</i>Cek Risiko</a>
+<a class="nav-link" data-nav="riwayat" href="#riwayat"><i>◷</i>Riwayat</a>
+<a class="nav-link" data-nav="edukasi" href="#edukasi"><i>▤</i>Edukasi</a>
+<a class="nav-link" data-nav="profil" href="#profil"><i>◎</i>Profil</a></nav>
+<div class="side-help"><span>✦</span><b>Jaga kesehatanmu</b><p>Kenali faktor risiko dan mulai langkah hidup lebih sehat.</p><a href="#edukasi">Baca tips kesehatan →</a></div>
+<div class="side-foot">● Sistem skrining siap digunakan</div></aside>
+<main class="main">
+<header class="topbar"><button class="mobile-menu" id="menuToggle">☰</button><div class="crumb">HealthCheck <span>/</span> <b id="pageName">Beranda</b></div><div class="top-right"><small id="todayLabel"></small><span class="avatar">A</span></div></header>
+
+<section class="page active" id="beranda">
+<div class="welcome"><div><p class="eyebrow">● HEALTHY LIVING STARTS HERE</p><h1>Halo, selamat datang! <em>✦</em></h1><p>Kenali risiko diabetes lebih awal dan mulai jaga kesehatan dari sekarang.</p></div><span class="date-chip" id="dateText"></span></div>
+<div class="hero"><div class="hero-copy"><span class="tag">PEMERIKSAAN AWAL BERBASIS AI</span><h2>Kenali risiko diabetes.<br><em>Jaga kesehatanmu.</em></h2><p>Isi beberapa informasi kesehatan sederhana untuk mendapatkan gambaran awal tingkat risiko diabetes.</p><a class="btn white" href="#cek">Mulai cek risiko <b>→</b></a><div class="hero-points">✓ Cepat &nbsp;&nbsp; ✓ Mudah &nbsp;&nbsp; ✓ Informatif</div></div>
+<div class="hero-visual"><div class="orbit"></div><div class="family"><div class="person p1"><i></i><b></b></div><div class="person p2"><i></i><b></b></div><div class="person p3"><i></i><b></b></div></div><div class="meter"><small>GLUCOSE CHECK</small><strong>98</strong><span>mg/dL</span><hr></div><span class="plus">＋</span><span class="heart">♡</span></div></div>
+<div class="stats">
+<article><span class="stat-icon mint">✚</span><div><small>Pemeriksaan</small><b id="totalChecks">0</b><small>Total pemeriksaan tersimpan</small></div></article>
+<article><span class="stat-icon yellow">⌁</span><div><small>Metode</small><b>Logistic Regression</b><small>Model machine learning</small></div></article>
+<article><span class="stat-icon blue">♡</span><div><small>Fokus</small><b>Deteksi dini</b><small>Skrining risiko awal</small></div></article></div>
+<div class="two-col"><article class="panel"><div class="panel-head"><div><p class="eyebrow">LANGKAH MUDAH</p><h3>Mulai dari hal sederhana</h3></div><span class="mini-icon">✦</span></div>
+<div class="step"><b>01</b><div><strong>Isi data kesehatan</strong><p>Masukkan informasi sesuai kondisi dan hasil pemeriksaanmu.</p></div></div>
+<div class="step"><b>02</b><div><strong>Proses prediksi</strong><p>Sistem memproses data menggunakan model machine learning.</p></div></div>
+<div class="step"><b>03</b><div><strong>Pahami hasilnya</strong><p>Lihat kategori hasil dan baca saran tindak lanjut.</p></div></div></article>
+<article class="panel reminder"><span class="reminder-icon">♥</span><p class="eyebrow">PENGINGAT KESEHATAN</p><h3>Sehat dimulai dari kebiasaan kecil.</h3><p>Jaga pola makan, aktif bergerak, cukup istirahat, dan lakukan pemeriksaan kesehatan secara berkala.</p><a href="#edukasi">Lihat edukasi kesehatan →</a></article></div>
+<p class="disclaimer">HealthCheck merupakan alat skrining awal dan bukan pengganti diagnosis dokter.</p></section>
+
+<section class="page" id="cek"><div class="intro"><p class="eyebrow">PEMERIKSAAN PERSONAL</p><h1>Cek Risiko Diabetes</h1><p>Lengkapi data berikut dengan benar. Informasi ini akan diproses oleh model prediksi.</p></div>
+<div class="form-layout"><article class="panel form-panel"><div class="form-title"><span>01</span><div><b>Informasi kesehatan</b><small>Semua kolom wajib diisi</small></div><strong>7 DATA</strong></div>
+<form id="riskForm"><div class="fields">
+<label>Jenis kelamin<select name="gender" required><option value="">Pilih jenis kelamin</option><option value="Female">Perempuan</option><option value="Male">Laki-laki</option></select></label>
+<label>Usia (tahun)<input name="age" type="number" min="1" max="120" placeholder="Contoh: 25" required></label>
+<label>Riwayat hipertensi<select name="hypertension" required><option value="">Pilih jawaban</option><option value="0">Tidak</option><option value="1">Ya</option></select></label>
+<label>Riwayat penyakit jantung<select name="heart_disease" required><option value="">Pilih jawaban</option><option value="0">Tidak</option><option value="1">Ya</option></select></label>
+<label>Riwayat merokok<select name="smoking_history" required><option value="">Pilih riwayat</option><option value="never">Tidak pernah</option><option value="No Info">Tidak ada informasi</option><option value="current">Saat ini</option><option value="former">Pernah / sudah berhenti</option><option value="ever">Pernah</option><option value="not current">Tidak merokok saat ini</option></select></label>
+<label>Berat badan (kg)<input id="weight" type="number" min="1" max="300" step=".1" placeholder="Contoh: 65" required></label>
+<label>Tinggi badan (cm)<input id="height" type="number" min="50" max="250" step=".1" placeholder="Contoh: 170" required></label>
+<label>Gula darah (mg/dL)<input name="blood_glucose_level" type="number" min="40" max="600" placeholder="Lihat hasil pemeriksaan" required><small>Masukkan nilai dari glukometer, puskesmas, atau laboratorium.</small></label></div>
+<div class="bmi"><span>⌁</span><div><small>Indeks Massa Tubuh (BMI) terhitung</small><b id="bmiValue">—</b></div><small id="bmiStatus">Isi berat & tinggi badan</small></div>
+<div class="actions"><button class="btn primary" id="submitBtn" type="submit">Proses pemeriksaan →</button><button class="btn outline" type="reset">Reset form</button></div></form><div class="error" id="formError" hidden></div></article>
+<aside class="panel info"><div class="medical-art"><span>♥</span><i></i></div><p class="eyebrow">SEBELUM MEMULAI</p><h3>Pastikan data yang kamu masukkan sesuai.</h3><ul><li>Gunakan hasil pemeriksaan gula darah yang tersedia.</li><li>Masukkan berat dan tinggi badan terkini.</li><li>Jangan mengira-ngira data medis.</li></ul><div class="warning">Hasil prediksi hanya untuk edukasi dan skrining awal, bukan diagnosis medis.</div></aside></div>
+<div class="panel result" id="resultPanel" hidden></div></section>
+
+<section class="page" id="riwayat"><div class="intro"><p class="eyebrow">CATATAN PEMERIKSAAN</p><h1>Riwayat Pemeriksaan</h1><p>Hasil pemeriksaan yang tersimpan pada browser perangkat ini.</p></div><article class="panel"><div class="panel-head"><div><h3>Riwayat skrining</h3><p>Data disimpan secara lokal di browser.</p></div><button class="btn outline small" id="clearHistory">Hapus riwayat</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Usia</th><th>Hasil</th><th>Skor model</th></tr></thead><tbody id="historyBody"><tr><td colspan="4" class="empty">Belum ada riwayat pemeriksaan.</td></tr></tbody></table></div></article></section>
+
+<section class="page" id="edukasi"><div class="intro"><p class="eyebrow">KENALI & CEGAH</p><h1>Edukasi Kesehatan</h1><p>Informasi umum untuk membantu memahami diabetes dan kebiasaan hidup sehat.</p></div><div class="edu-grid">
+<article class="edu-card green"><span>♡</span><small>01 / KENALI</small><h3>Apa itu diabetes?</h3><p>Diabetes adalah kondisi ketika kadar glukosa dalam darah terlalu tinggi karena gangguan produksi atau kerja insulin.</p></article>
+<article class="edu-card yellow"><span>⌁</span><small>02 / PAHAMI</small><h3>Kenali faktor risiko</h3><p>Usia, berat badan, riwayat keluarga, tekanan darah, dan pola hidup dapat berkaitan dengan risiko diabetes.</p></article>
+<article class="edu-card blue"><span>✚</span><small>03 / LAKUKAN</small><h3>Jaga pola hidup</h3><p>Konsumsi makanan seimbang, rutin bergerak, tidur cukup, dan konsultasikan pemeriksaan dengan tenaga kesehatan.</p></article></div><div class="panel edu-note"><b>Ingat:</b> Diabetes tidak dapat dipastikan hanya dari gejala atau hasil prediksi aplikasi. Diagnosis memerlukan pemeriksaan medis.</div></section>
+
+<section class="page" id="profil"><div class="intro"><p class="eyebrow">TENTANG APLIKASI</p><h1>Profil HealthCheck</h1><p>Informasi sistem dan teknologi yang digunakan dalam proyek ini.</p></div><div class="profile-grid"><article class="panel profile-card"><span class="profile-logo">✚</span><h2>HealthCheck</h2><p>Sistem skrining awal risiko diabetes berbasis machine learning.</p><div class="meta"><span>Nama model</span><b>Logistic Regression</b><span>Backend</span><b>Python + Flask API</b><span>Frontend</span><b>HTML, CSS, JavaScript</b><span>Endpoint</span><b>POST /predict</b></div></article><article class="panel"><p class="eyebrow">BATASAN SISTEM</p><h3>Gunakan hasil dengan bijak</h3><p>Model menghasilkan kategori dan skor berdasarkan tujuh fitur masukan. Skor model bukan peluang pasti seseorang menderita diabetes.</p><p>Untuk mengetahui kondisi kesehatan, lakukan pemeriksaan laboratorium dan konsultasi dengan dokter atau tenaga kesehatan.</p><div class="api-status" id="apiStatus">Memeriksa koneksi API...</div></article></div></section>
+<footer>© 2026 HealthCheck <span>Proyek edukasi · Bukan alat diagnosis medis</span></footer>
+</main></div>
+<script src="js/config.js"></script><script src="js/questions.js"></script><script src="js/app.js"></script></body></html>
