@@ -3,7 +3,7 @@ Login, riwayat di database, dan fitur admin (Flask Blueprint, didaftarkan di app
 
 Ringkasan endpoint:
   POST   /auth/daftar                      daftar akun user (wajib setuju penyimpanan data)
-  POST   /auth/masuk                       login
+  POST   /auth/masuk                       login ({"sebagai": "admin"} = tab Admin, hanya akun admin)
   POST   /auth/keluar                      logout
   GET    /auth/saya                        akun yang sedang login
   GET    /riwayat                          riwayat milik sendiri
@@ -11,15 +11,21 @@ Ringkasan endpoint:
   GET    /admin/statistik                  (admin) jumlah pengguna, pemeriksaan, % risiko tinggi
   GET    /admin/pengguna                   (admin) daftar pengguna
   PATCH  /admin/pengguna/<id>              (admin) aktifkan / nonaktifkan akun
+  DELETE /admin/pengguna/<id>              (admin) hapus akun user permanen (wajib kirim email sebagai konfirmasi)
+  GET    /admin/grafik                     (admin) jumlah pemeriksaan per hari (14 hari) + total tinggi/rendah
+  GET    /admin/ekspor.csv                 (admin) unduh semua riwayat sebagai CSV
   GET    /admin/pengguna/<id>/riwayat      (admin) riwayat seorang pengguna
   DELETE /admin/pengguna/<id>/riwayat      (admin) hapus semua riwayat seorang pengguna
   DELETE /admin/riwayat/<id>               (admin) hapus satu riwayat
 """
+import csv
+import datetime
+import io
 import json
 import re
 import time
 from functools import wraps
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, Response, jsonify, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 import db
 
@@ -145,6 +151,8 @@ def masuk():
         return galat("Email atau kata sandi salah.", 401)
     if not u["aktif"]:
         return galat("Akun ini dinonaktifkan oleh admin.", 403)
+    if d.get("sebagai") == "admin" and u["peran"] != "admin":
+        return galat("Akun ini bukan admin. Gunakan tab Masuk.", 403)
     _gagal.pop(kunci, None)
     session.clear()
     session["user_id"] = u["id"]
@@ -243,3 +251,70 @@ def hapus_satu_riwayat(_, rid):
     if not n:
         return galat("Riwayat tidak ditemukan.", 404)
     return jsonify({"pesan": "Riwayat dihapus.", "dihapus": n})
+
+
+@bp.delete("/admin/pengguna/<int:uid>")
+@wajib_admin
+def hapus_akun(admin, uid):
+    """Hapus akun user beserta seluruh riwayatnya (ON DELETE CASCADE). Tidak bisa dibatalkan."""
+    if uid == admin["id"]:
+        return galat("Admin tidak dapat menghapus akunnya sendiri.")
+    u = db.ambil("SELECT id, email, peran FROM users WHERE id=%s", (uid,), satu=True)
+    if not u:
+        return galat("Pengguna tidak ditemukan.", 404)
+    if u["peran"] == "admin":
+        return galat("Akun admin tidak dapat dihapus dari website.", 403)
+    if str(data_json().get("konfirmasi_email", "")).strip().lower() != u["email"]:
+        return galat("Email konfirmasi tidak sama. Akun tidak dihapus.")
+    db.ubah("DELETE FROM users WHERE id=%s", (uid,))
+    return jsonify({"pesan": "Akun dan seluruh riwayatnya dihapus.", "dihapus": uid})
+
+
+HARI_GRAFIK = 14
+
+
+@bp.get("/admin/grafik")
+@wajib_admin
+def grafik(_):
+    hari_ini = db.ambil("SELECT CURDATE() AS d", satu=True)["d"]
+    rows = db.ambil("SELECT DATE(waktu) AS d, COALESCE(SUM(label='Risiko tinggi'), 0) AS tinggi, "
+                    "COALESCE(SUM(label<>'Risiko tinggi'), 0) AS rendah FROM riwayat "
+                    "WHERE waktu >= CURDATE() - INTERVAL %s DAY GROUP BY DATE(waktu)", (HARI_GRAFIK - 1,))
+    per_hari = {r["d"]: r for r in rows}
+    harian = []
+    for i in range(HARI_GRAFIK - 1, -1, -1):
+        d = hari_ini - datetime.timedelta(days=i)
+        r = per_hari.get(d, {"tinggi": 0, "rendah": 0})
+        harian.append({"tanggal": d.isoformat(), "tinggi": int(r["tinggi"]), "rendah": int(r["rendah"])})
+    t = db.ambil("SELECT COALESCE(SUM(label='Risiko tinggi'), 0) AS tinggi, "
+                 "COALESCE(SUM(label<>'Risiko tinggi'), 0) AS rendah FROM riwayat", satu=True)
+    return jsonify({"harian": harian, "total": {"tinggi": int(t["tinggi"]), "rendah": int(t["rendah"])}})
+
+
+KOLOM_CSV = ["waktu", "nama", "email", "gender", "age", "bmi", "blood_glucose_level", "hypertension",
+             "heart_disease", "smoking_history", "skor", "label"]
+
+
+def sel_aman(v):
+    """Cegah 'CSV injection': teks yang diawali = + - @ tidak dijalankan sebagai rumus oleh Excel."""
+    v = "" if v is None else str(v)
+    return "'" + v if v[:1] in ("=", "+", "-", "@", "\t", "\r") else v
+
+
+@bp.get("/admin/ekspor.csv")
+@wajib_admin
+def ekspor_csv(_):
+    rows = db.ambil("SELECT r.waktu, r.input, r.skor, r.label, u.nama, u.email FROM riwayat r "
+                    "JOIN users u ON u.id = r.user_id ORDER BY r.waktu DESC, r.id DESC")
+    buf = io.StringIO()
+    tulis = csv.writer(buf, delimiter=";")   # titik koma: dibaca rapi oleh Excel berbahasa Indonesia
+    tulis.writerow(KOLOM_CSV)
+    for r in rows:
+        x = json.loads(r["input"])
+        tulis.writerow([sel_aman(v) for v in [r["waktu"].strftime("%Y-%m-%d %H:%M"), r["nama"], r["email"],
+                        x.get("gender"), x.get("age"), x.get("bmi"), x.get("blood_glucose_level"),
+                        x.get("hypertension"), x.get("heart_disease"), x.get("smoking_history"),
+                        float(r["skor"]), r["label"]]])
+    nama_file = f"riwayat_healthcheck_{datetime.date.today().isoformat()}.csv"
+    return Response("\ufeff" + buf.getvalue(), mimetype="text/csv; charset=utf-8",   # \ufeff (BOM): agar Excel membaca UTF-8
+                    headers={"Content-Disposition": f'attachment; filename="{nama_file}"', "Cache-Control": "no-store"})

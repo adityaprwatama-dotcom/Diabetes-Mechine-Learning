@@ -28,8 +28,8 @@ menaikkan skor, dan rekomendasi umum.
    python -m pip install -r requirements.txt
    ```
 
-### 2. Menyiapkan database untuk login (sekali saja)
-Cek risiko tetap bisa dipakai **tanpa** langkah ini. Langkah ini hanya untuk fitur login, riwayat di database, dan admin.
+### 2. Menyiapkan database (wajib, sekali saja)
+Website **wajib login**, jadi langkah ini harus dilakukan. Tanpa MySQL, website tidak bisa dipakai.
 1. Pasang [XAMPP](https://www.apachefriends.org/), buka **XAMPP Control Panel**, klik **Start** pada **MySQL**.
 2. Buat database dan tabel:
    ```
@@ -55,8 +55,8 @@ Cek risiko tetap bisa dipakai **tanpa** langkah ini. Langkah ini hanya untuk fit
    python app.py
    ```
 2. Di VS Code, klik kanan `index.html` > **Open with Live Server**, lalu tekan **Ctrl+F5**.
-3. Buka menu **Cek Risiko**, isi form, klik **Proses pemeriksaan**.
-4. (Opsional) Menu **Masuk / Daftar**: buat akun agar riwayat tersimpan di database. Admin masuk dari menu yang sama, lalu membuka **Dasbor Admin**.
+3. Website langsung menampilkan layar **Masuk / Daftar / Admin**. Pengguna membuat akun (tab **Daftar**) atau masuk (tab **Masuk**). Admin memakai tab **Admin** dan langsung dibawa ke **Dasbor Admin** (statistik, grafik 14 hari, cari pengguna, unduh CSV, lihat/hapus riwayat, nonaktifkan atau hapus akun).
+4. Buka menu **Cek Risiko**, isi form, klik **Proses pemeriksaan**. Hasil otomatis tersimpan di database pada akun Anda.
 
 ### 4. Menguji (opsional)
 Di jendela PowerShell **kedua** (API tetap menyala di jendela pertama):
@@ -64,7 +64,7 @@ Di jendela PowerShell **kedua** (API tetap menyala di jendela pertama):
 python test_api.py
 python test_auth.py
 ```
-Hasil yang benar: `SEMUA PENGECEKAN FAKTOR/REKOMENDASI LULUS` dan `33 dari 33 pengecekan lulus`. `test_auth.py` butuh MySQL menyala; akun uji dihapus otomatis.
+Hasil yang benar: `SEMUA PENGECEKAN FAKTOR/REKOMENDASI LULUS` dan `46 dari 46 pengecekan lulus`. Keduanya butuh MySQL menyala; akun uji dihapus otomatis.
 
 ### 5. Melatih ulang model (hanya bila perlu)
 Model sudah tersedia di repo. Latih ulang hanya bila daftar fitur diubah atau model gagal dimuat:
@@ -108,8 +108,9 @@ keterbatasan ada di `docs/KONTEKS.md`.
 ## Masalah yang sering terjadi
 - **`python` tidak dikenali**: pasang ulang Python dan centang "Add python.exe to PATH".
 - **"Tidak dapat terhubung ke API"** di website: pastikan `python app.py` sedang berjalan.
-- **"Database belum menyala"** saat masuk/daftar: Start MySQL di XAMPP Control Panel. Cek risiko tetap jalan tanpa MySQL.
+- **"Database belum menyala"** saat masuk/daftar: Start MySQL di XAMPP Control Panel. Website wajib login, jadi MySQL harus menyala.
 - **Sudah masuk tapi langsung keluar lagi**: buka website di `http://127.0.0.1:5500` (bukan file:// langsung) agar cookie login terkirim.
-- **Port 8000 sudah dipakai**: tutup jendela `python app.py` lain yang masih terbuka.
+- **Port 8000 sudah dipakai** atau fitur baru tidak muncul (misalnya grafik admin kosong): kemungkinan ada dua `python app.py` menyala. Tutup semua jendela `python app.py`, lalu jalankan satu saja.
+- **File CSV terbuka berantakan di Excel**: file memakai pemisah titik koma (;). Bila Excel Anda berbahasa Inggris, buka lewat Data > From Text/CSV dan pilih pemisah Semicolon. File CSV berisi data kesehatan, jangan disebarkan.
 - **Model gagal dimuat**: jalankan `python -m pip install -r requirements.txt`, lalu bila masih gagal `python train_model_dpd.py`.
 - Jangan membuka lalu menyimpan file CSV dataset dengan Excel.

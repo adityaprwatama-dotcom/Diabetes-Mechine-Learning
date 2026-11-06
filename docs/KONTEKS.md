@@ -53,13 +53,17 @@ Dokumen ini adalah memori jangka panjang proyek. Perbarui bagian "Status" setiap
 - Aset ilustrasi SVG sudah pernah dibuat (7 file, folder `ilustrasi-ruanggula/`). Pakai ulang bila ada.
 
 ## 6. Login + MySQL (diputuskan Tresure 2026-11-06, dikerjakan di cabang `fitur-login`)
-- Keputusan: cek risiko TIDAK wajib login. Saat login, hasil cek risiko disimpan ke MySQL. Yang disimpan: akun + riwayat (input 7 fitur, skor, label, waktu).
+- Keputusan awal: cek risiko TIDAK wajib login (diganti, lihat "Perubahan" di bawah). Saat login, hasil cek risiko disimpan ke MySQL. Yang disimpan: akun + riwayat (input 7 fitur, skor, label, waktu).
 - Admin bisa: lihat daftar pengguna, statistik (jumlah pengguna, pemeriksaan, % risiko tinggi, 7 hari), lihat/hapus riwayat pengguna, nonaktifkan/aktifkan akun. Admin tidak bisa daftar lewat website; dibuat dengan `python buat_admin.py`.
 - Tabel (`schema.sql`): `users(id, nama, email unik, password_hash, peran user/admin, aktif, setuju_simpan, dibuat)` dan `riwayat(id, user_id FK ON DELETE CASCADE, input JSON, skor, label, waktu)`.
 - Keamanan: hash werkzeug (scrypt), query berparameter, sesi cookie HttpOnly SameSite=Lax, CORS hanya 127.0.0.1:5500/localhost:5500 dengan credentials, batas 5 login gagal per 15 menit (memori), persetujuan wajib saat daftar, user MySQL khusus `healthcheck` (hanya SELECT/INSERT/UPDATE/DELETE di database healthcheck), kredensial di `.env`.
 - Lingkungan: XAMPP di `C:\xampp`, MariaDB 10.4.32. `mysql.db` sempat rusak dan diperbaiki (lihat CLAUDE.md).
 - Pengujian 2026-11-06: `test_api.py` tetap sama (skor 1%/99%/98%); `test_auth.py` 33/33 lulus (dua kali berturut-turut); uji tampilan Edge (tamu, daftar, cek tersimpan, user ditolak dari admin, keluar, masuk admin, statistik, riwayat, nonaktif/aktif, hapus) semua sesuai; MySQL mati: cek risiko tamu tetap jalan, login 503 dengan pesan jelas.
-- Belum: SRS perlu diperbarui (fitur login/admin, karakteristik pengguna admin, ERD, kasus uji baru).
+- **Perubahan 2026-11-06 (keputusan Tresure): login WAJIB.** Website dibuka langsung tampil layar Masuk/Daftar; menu dan halaman lain baru muncul setelah login. `/predict` juga menolak (401) bila belum login, jadi bukan hanya disembunyikan di tampilan. Mode tamu dan riwayat localStorage dihapus. Konsekuensi: MySQL harus menyala agar website bisa dipakai. Algoritma/model tidak berubah.
+- Pengujian setelah perubahan (2026-11-06): `test_api.py` lulus (tanpa login 401; skor tetap 1%/99%/98%); `test_auth.py` 33/33 lulus (no. 1 kini "tamu ditolak 401"); uji tampilan Edge 13 langkah sesuai (layar login tampil pertama, menu tersembunyi, sandi salah ditolak, daftar, cek tersimpan, riwayat, user ditolak dari admin, muat ulang tetap masuk, keluar membersihkan layar, masuk admin, admin keluar); API mati: layar login menampilkan pesan "Tidak dapat terhubung ke API".
+- **Fitur admin tambahan (2026-11-06, disetujui Tresure, 5 fitur):** (1) grafik batang pemeriksaan 14 hari (rendah/tinggi bertumpuk) + perbandingan total, tanpa library; (2) cari pengguna (nama/email, di browser); (3) unduh CSV semua riwayat (`GET /admin/ekspor.csv`, pemisah titik koma, BOM UTF-8, pengaman rumus Excel); (4) hapus akun user permanen (`DELETE /admin/pengguna/<id>`, wajib ketik ulang email; admin tidak bisa menghapus diri sendiri atau admin lain; riwayat ikut terhapus); (5) tab **Admin** di layar login (`/auth/masuk` dengan `sebagai: "admin"` menolak akun biasa, 403, tanpa sesi).
+- Pengujian fitur admin (2026-11-06): `test_auth.py` 46/46 lulus (13 pengecekan baru no. 34-46); `test_api.py` lulus (skor tetap 1%/99%/98%); uji tampilan Edge 16 langkah sesuai (tab Admin, akun biasa ditolak, grafik 14 kolom, cari, unduh CSV, hapus akun salah email/batal/benar, keluar membersihkan dasbor).
+- Belum: SRS perlu diperbarui (fitur login/admin, login wajib, fitur admin tambahan, karakteristik pengguna admin, ERD, kasus uji baru).
 
 ## 7. Kolaborasi GitHub
 - Satu repo, cabang per anggota/fitur, pull request untuk digabung.
@@ -70,7 +74,7 @@ Dokumen ini adalah memori jangka panjang proyek. Perbarui bagian "Status" setiap
 ## 8. Pertanyaan terbuka
 1. Apakah dosen mengizinkan tidak memakai kolom HbA1c?
 2. Hasil metrik asli pada Diabetes Prediction Dataset?
-3. ~~Scope login/MySQL?~~ Terjawab 2026-11-06: login opsional + MySQL + admin (lihat Bagian 6).
+3. ~~Scope login/MySQL?~~ Terjawab 2026-11-06: login + MySQL + admin; awalnya opsional, lalu diubah menjadi WAJIB di hari yang sama (lihat Bagian 6).
 4. ~~Nama akhir?~~ Terjawab: "HealthCheck" (2026-11-05).
 5. Apakah akan di-deploy (opsional) atau cukup berjalan lokal?
 
@@ -97,6 +101,8 @@ Dokumen ini adalah memori jangka panjang proyek. Perbarui bagian "Status" setiap
 - [ ] Konfirmasi dosen
 - [ ] Desain Figma diterapkan
 - [x] Login + MySQL + Dasbor Admin (2026-11-06, cabang `fitur-login`; semua uji lulus, lihat Bagian 6). Belum digabung ke `main`.
+- [x] Login wajib di awal website (2026-11-06, cabang `fitur-login`; uji lulus, lihat Bagian 6).
+- [x] Fitur admin tambahan: grafik, cari, CSV, hapus akun, tab Admin (2026-11-06, cabang `fitur-login`; 46/46 lulus).
 - [ ] Perbarui SRS untuk fitur login/admin
 - [ ] Perindah tampilan (efek dan animasi)
 - [x] GitHub: folder tersambung ke repo, commit `cf546e9` di-push 2026-11-06 (push memakai akun Adityaputt, kolaborator).

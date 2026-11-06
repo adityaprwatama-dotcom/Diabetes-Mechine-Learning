@@ -6,16 +6,17 @@ Cara pakai:
   2. python -m pip install -r requirements.txt
   3. (untuk login) nyalakan MySQL di XAMPP dan siapkan .env (lihat README.md)
   4. python app.py   (server di http://127.0.0.1:8000)
-Cek risiko tetap bisa dipakai tanpa login dan tanpa MySQL. Endpoint login/admin ada di auth.py.
+Cek risiko WAJIB login (keputusan 2026-11-06), jadi MySQL harus menyala. Endpoint login/admin ada di auth.py.
 """
 import json
 import os
 import secrets
 import joblib
 import pandas as pd
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 import auth
+import db
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 model = joblib.load(os.path.join(BASE, "model_diabetes.pkl"))
@@ -116,6 +117,16 @@ def health():
 
 @app.post("/predict")
 def predict():
+    # Wajib login: tanpa akun, cek risiko ditolak (algoritma model di bawah tidak berubah).
+    if not session.get("user_id"):
+        return jsonify({"error": "Silakan masuk terlebih dahulu."}), 401
+    try:
+        db.ambil("SELECT 1")
+    except db.DatabaseMati:
+        return jsonify({"error": auth.PESAN_DB_MATI}), 503
+    if not auth.pengguna_sekarang():   # akun dihapus atau dinonaktifkan admin
+        return jsonify({"error": "Silakan masuk terlebih dahulu."}), 401
+
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify({"error": "Kirim data dalam format JSON."}), 400
@@ -156,7 +167,7 @@ def predict():
         "faktor": hitung_faktor(nilai),            # maksimal 3 faktor yang paling menaikkan skor
         "rekomendasi": buat_rekomendasi(nilai, tinggi),
         "disclaimer": DISCLAIMER,
-        "tersimpan": auth.simpan_riwayat(nilai, skor, label),   # True bila pengguna sedang login
+        "tersimpan": auth.simpan_riwayat(nilai, skor, label),   # True bila berhasil masuk database
     })
 
 

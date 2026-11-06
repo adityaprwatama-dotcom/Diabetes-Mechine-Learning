@@ -20,13 +20,13 @@ Riwayat keputusan, metrik, desain Figma, dan daftar tugas: @docs/KONTEKS.md
 3. **Jangan ubah atribut `name` di form `index.html` (dan `id` di `js/questions.js`).** Nilainya = nama kolom dataset yang dikirim ke API. Form yang dipakai sekarang ditulis langsung di `index.html`; `js/app.js` membaca `name` itu.
 4. Bila daftar fitur berubah: ubah `FITUR` di skrip pelatihan, latih ulang, lalu uji ulang API dan form. `app.py` membaca `fitur.json`.
 5. Skor model bukan peluang pasti (`class_weight="balanced"`). Di UI pakai istilah "skor risiko model".
-6. Tamu: riwayat hanya di browser. Login: riwayat disimpan ke MySQL dengan persetujuan saat daftar (`setuju_simpan`). Teks di halaman Riwayat/Hasil/Daftar harus selalu jujur soal tempat penyimpanan.
+6. **Wajib login** (keputusan 2026-11-06): website dibuka langsung tampil layar Masuk/Daftar (`#gate` di `index.html`); `/predict` menolak (401) bila belum login. Tidak ada mode tamu dan tidak ada riwayat di browser. Semua hasil disimpan ke MySQL dengan persetujuan saat daftar (`setuju_simpan`). Teks di halaman Riwayat/Hasil/Daftar harus selalu jujur soal tempat penyimpanan.
 7. Keamanan login: kata sandi hanya disimpan sebagai hash; query MySQL selalu berparameter (`%s`); kredensial hanya di `.env` (tidak di-commit); admin dibuat lewat `python buat_admin.py`, tidak lewat website.
 
 ## Teknologi
 - Frontend: HTML, CSS, JavaScript biasa (tanpa framework). Nama website: "HealthCheck" (sudah diputuskan). Tampilan: dasbor dengan menu samping, warna hijau, font DM Sans dan Manrope (Google Fonts).
-- Backend: Flask + flask-cors, port 8000. Endpoint `GET /health`, `POST /predict`; login/riwayat/admin di `auth.py` (`/auth/*`, `/riwayat`, `/admin/*`). Sesi cookie HttpOnly SameSite=Lax; CORS hanya untuk `CORS_ORIGINS` di `.env` (default 127.0.0.1:5500 dan localhost:5500).
-- Database: MySQL/MariaDB 10.4 dari XAMPP (`C:\xampp`), database `healthcheck` (tabel `users`, `riwayat`, lihat `schema.sql`), user MySQL `healthcheck` (bukan root). Cek risiko tetap jalan bila MySQL mati.
+- Backend: Flask + flask-cors, port 8000. Endpoint `GET /health`, `POST /predict`; login/riwayat/admin di `auth.py` (`/auth/*`, `/riwayat`, `/admin/*`, termasuk `/admin/grafik`, `/admin/ekspor.csv`, `DELETE /admin/pengguna/<id>`). Sesi cookie HttpOnly SameSite=Lax; CORS hanya untuk `CORS_ORIGINS` di `.env` (default 127.0.0.1:5500 dan localhost:5500).
+- Database: MySQL/MariaDB 10.4 dari XAMPP (`C:\xampp`), database `healthcheck` (tabel `users`, `riwayat`, lihat `schema.sql`), user MySQL `healthcheck` (bukan root). Karena wajib login, website TIDAK bisa dipakai bila MySQL mati (login dan cek risiko menjawab 503 dengan pesan jelas).
 - Model: scikit-learn Pipeline (OneHotEncoder + StandardScaler + LogisticRegression) disimpan sebagai `model_diabetes.pkl`; daftar fitur di `fitur.json`.
 - Live Server VS Code di port 5500.
 - Lingkungan Tresure: Python 3.13, pandas 3.x, scikit-learn 1.9.x.
@@ -37,7 +37,7 @@ index.html                 halaman utama (Beranda, Cek Risiko, Riwayat, Edukasi,
 css/style.css              warna dan font di :root
 js/config.js               API_URL (tidak dipakai; app.js memakai http://<host halaman>:8000)
 js/questions.js            daftar pertanyaan; dimuat tetapi SAAT INI TIDAK DIPAKAI oleh app.js
-js/app.js                  validasi, BMI, panggil API, hasil, login, riwayat (localStorage atau database), dasbor admin
+js/app.js                  layar login pembuka, validasi, BMI, panggil API, hasil, riwayat (database), dasbor admin
 app.py                     API Flask (prediksi) + mendaftarkan auth.py
 auth.py                    endpoint login, riwayat database, admin
 db.py                      koneksi MySQL, membaca .env
@@ -45,8 +45,8 @@ schema.sql                 membuat database healthcheck (aman dijalankan ulang)
 buat_admin.py              membuat akun admin (kata sandi diketik tersembunyi)
 .env.example               contoh pengaturan; .env asli TIDAK di-commit
 train_model_dpd.py         pelatihan model
-test_api.py                uji API prediksi
-test_auth.py               uji login/riwayat/admin/keamanan (33 pengecekan, butuh MySQL; akun uji @uji.healthcheck.local dihapus otomatis)
+test_api.py                uji API prediksi (butuh MySQL; memakai akun uji sementara yang dihapus otomatis)
+test_auth.py               uji login/riwayat/admin/keamanan (46 pengecekan, butuh MySQL; akun uji @uji.healthcheck.local dihapus otomatis)
 requirements.txt           daftar library dengan versi terkunci
 README.md                  cara memasang dan menjalankan (untuk anggota kelompok)
 .gitignore                 __pycache__, .env, venv tidak di-upload
@@ -68,7 +68,7 @@ Keterbatasan: asal data dan cara pengumpulan tidak dijelaskan rinci; tidak jelas
 python -m pip install -r requirements.txt
 python train_model_dpd.py     # membuat model_diabetes.pkl dan fitur.json
 python app.py                 # API http://127.0.0.1:8000 (biarkan terbuka)
-python test_api.py            # di terminal lain
+python test_api.py            # di terminal lain (butuh MySQL menyala)
 python test_auth.py           # butuh MySQL XAMPP menyala
 python buat_admin.py          # membuat akun admin
 C:\xampp\mysql\bin\mysql.exe -u root -e "source schema.sql"   # membuat tabel (PowerShell tidak mendukung "<")
@@ -78,7 +78,7 @@ Website: klik kanan `index.html` > Open with Live Server, lalu Ctrl+F5.
 ## Jebakan yang pernah terjadi
 - Ctrl+V di PowerShell bisa memicu error PSReadLine: tempel dengan klik kanan.
 - `python` tidak dikenali: pasang Python dari python.org, centang "Add python.exe to PATH", gunakan `python -m pip`.
-- Dua API menyala bersamaan di port 8000 akan bentrok.
+- Dua API menyala bersamaan di port 8000 akan bentrok. Windows bisa membiarkan keduanya menyala, lalu permintaan masuk ke API lama (fitur baru tampak 404). Cek dengan `Get-NetTCPConnection -LocalPort 8000 -State Listen`.
 - Latih ulang model setelah daftar fitur berubah. File `.pkl` bisa gagal dimuat bila versi library berbeda.
 - Jangan buka lalu simpan CSV dari Excel.
 - Folder `css` dan `js` harus huruf kecil dan sejajar dengan `index.html`.

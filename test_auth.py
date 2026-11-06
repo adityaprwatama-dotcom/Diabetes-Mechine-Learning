@@ -53,7 +53,7 @@ bersihkan()
 # ---------------- tamu
 tamu = Klien()
 s, d, _ = tamu("POST", "/predict", SEHAT)
-cek("1. Tamu tetap bisa cek risiko (tidak disimpan)", s == 200 and d.get("tersimpan") is False, f"{d.get('label')}, skor {d.get('probability')}")
+cek("1. Tamu (belum masuk) ditolak saat cek risiko", s == 401, d.get("error"))
 s, d, _ = tamu("GET", "/auth/saya"); cek("2. Tamu: status belum masuk", s == 200 and d["masuk"] is False)
 s, d, _ = tamu("GET", "/riwayat"); cek("3. Tamu tidak bisa membuka riwayat database", s == 401, d.get("error"))
 
@@ -127,7 +127,58 @@ _, _, h = Klien()("POST", "/auth/masuk", {"email": ADMIN_EMAIL, "password": ADMI
 kuki = h.get("Set-Cookie", "")
 cek("33. Cookie sesi HttpOnly dan SameSite=Lax", "HttpOnly" in kuki and "SameSite=Lax" in kuki)
 
+# ---------------- fitur admin tambahan: grafik, CSV, hapus akun, tab Admin
+def mentah(klien, path):
+    """Ambil jawaban apa adanya (untuk CSV yang bukan JSON)."""
+    try:
+        with klien.op.open(urllib.request.Request(API + path)) as r:
+            return r.status, r.read().decode("utf-8"), dict(r.headers)
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode("utf-8"), dict(e.headers)
+
+
+hari_ini = lambda g: g["harian"][-1]["tinggi"] + g["harian"][-1]["rendah"]
+_, g0, _ = a("GET", "/admin/grafik")
+u3 = Klien()
+s, d, _ = u3("POST", "/auth/daftar", {"nama": "=2+3 Uji CSV", "email": "csv" + DOMAIN, "password": "sandiCsv123", "setuju": True})
+u3("POST", "/predict", SEHAT)
+s, g1, _ = a("GET", "/admin/grafik")
+cek("34. Admin melihat grafik 14 hari (hari ini bertambah 1 setelah cek risiko)",
+    s == 200 and len(g1["harian"]) == 14 and hari_ini(g1) == hari_ini(g0) + 1
+    and g1["total"]["tinggi"] + g1["total"]["rendah"] == g0["total"]["tinggi"] + g0["total"]["rendah"] + 1,
+    f"hari ini {hari_ini(g0)} -> {hari_ini(g1)}, tanggal terakhir {g1['harian'][-1]['tanggal']}")
+s, d, _ = u3("GET", "/admin/grafik"); cek("35. User biasa tidak bisa membuka grafik admin", s == 403, d.get("error"))
+s, teks, h = mentah(a, "/admin/ekspor.csv")
+baris_csv = teks.lstrip("﻿").splitlines()
+cek("36. Admin mengunduh CSV (header benar, berisi email pengguna, ada BOM untuk Excel)",
+    s == 200 and h.get("Content-Type", "").startswith("text/csv") and teks.startswith("﻿")
+    and baris_csv[0].startswith("waktu;nama;email;gender") and any(("csv" + DOMAIN) in b for b in baris_csv),
+    f"{len(baris_csv) - 1} baris data")
+cek("37. CSV aman dari rumus Excel (nama '=2+3' ditulis sebagai teks)", any(";'=2+3 Uji CSV;" in b for b in baris_csv))
+s, teks, _ = mentah(u3, "/admin/ekspor.csv"); cek("38. User biasa tidak bisa mengunduh CSV", s == 403)
+uid3 = db.ambil("SELECT id FROM users WHERE email=%s", ("csv" + DOMAIN,), satu=True)["id"]
+s, d, _ = a("DELETE", f"/admin/pengguna/{uid3}", {"konfirmasi_email": "salah" + DOMAIN})
+ada = db.ambil("SELECT COUNT(*) AS n FROM users WHERE id=%s", (uid3,), satu=True)["n"]
+cek("39. Hapus akun dengan email konfirmasi salah ditolak (akun tetap ada)", s == 400 and ada == 1, d.get("error"))
+s, d, _ = a("DELETE", f"/admin/pengguna/{uid3}", {"konfirmasi_email": "CSV" + DOMAIN.upper()})
+sisa_u = db.ambil("SELECT COUNT(*) AS n FROM users WHERE id=%s", (uid3,), satu=True)["n"]
+sisa_r = db.ambil("SELECT COUNT(*) AS n FROM riwayat WHERE user_id=%s", (uid3,), satu=True)["n"]
+cek("40. Admin menghapus akun permanen (riwayatnya ikut terhapus)", s == 200 and sisa_u == 0 and sisa_r == 0, d.get("pesan"))
+s, d, _ = u3("GET", "/auth/saya"); cek("41. Akun yang dihapus langsung keluar", d["masuk"] is False)
+s, d, _ = a("DELETE", f"/admin/pengguna/{uid3}", {"konfirmasi_email": "csv" + DOMAIN}); cek("42. Hapus akun yang sudah tidak ada = 404", s == 404)
+s, d, _ = a("DELETE", f"/admin/pengguna/{aid}", {"konfirmasi_email": ADMIN_EMAIL}); cek("43. Admin tidak bisa menghapus dirinya sendiri", s == 400, d.get("error"))
+db.ubah("INSERT INTO users (nama, email, password_hash, peran) VALUES (%s, %s, %s, 'admin')",
+        ("Admin Dua", "admin2" + DOMAIN, generate_password_hash(ADMIN_SANDI)))
+aid2 = db.ambil("SELECT id FROM users WHERE email=%s", ("admin2" + DOMAIN,), satu=True)["id"]
+s, d, _ = a("DELETE", f"/admin/pengguna/{aid2}", {"konfirmasi_email": "admin2" + DOMAIN}); cek("44. Admin lain tidak bisa dihapus dari website", s == 403, d.get("error"))
+k2 = Klien()
+s, d, _ = k2("POST", "/auth/masuk", {"email": USER["email"], "password": USER["password"], "sebagai": "admin"})
+s2, d2, _ = k2("GET", "/auth/saya")
+cek("45. Tab Admin menolak akun biasa (dan tidak membuat sesi)", s == 403 and d2["masuk"] is False, d.get("error"))
+s, d, _ = Klien()("POST", "/auth/masuk", {"email": ADMIN_EMAIL, "password": ADMIN_SANDI, "sebagai": "admin"})
+cek("46. Tab Admin menerima akun admin", s == 200 and d["pengguna"]["peran"] == "admin")
+
 bersihkan()
-sisa = db.ambil("SELECT COUNT(*) AS n FROM users WHERE email LIKE %s", ("%" + DOMAIN,), satu=True)["n"]
+sisa =db.ambil("SELECT COUNT(*) AS n FROM users WHERE email LIKE %s", ("%" + DOMAIN,), satu=True)["n"]
 print(f"\nAkun uji dibersihkan (sisa: {sisa}).")
 print(f"HASIL: {sum(hasil)} dari {len(hasil)} pengecekan lulus." + ("  SEMUA LULUS" if all(hasil) else "  ADA YANG GAGAL"))

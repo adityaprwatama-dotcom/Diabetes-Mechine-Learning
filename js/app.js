@@ -1,16 +1,18 @@
-/* HealthCheck: navigasi, form cek risiko, riwayat, login, dan dasbor admin.
-   Tamu  : riwayat disimpan di localStorage browser.
-   Login : riwayat disimpan di database lewat API (cookie sesi, credentials: "include"). */
+/* HealthCheck: layar login, navigasi, form cek risiko, riwayat, dan dasbor admin.
+   Wajib login (keputusan 2026-11-06): selama belum masuk, hanya layar login (#gate) yang tampil.
+   Riwayat selalu disimpan di database lewat API (cookie sesi, credentials: "include"). */
 (() => {
   // Alamat API memakai nama host yang sama dengan halaman (127.0.0.1 atau localhost) agar cookie login terkirim.
   const HOST = ["localhost", "127.0.0.1"].includes(location.hostname) ? location.hostname : "127.0.0.1";
   const API = (window.API_BASE_URL || `http://${HOST}:8000`).replace(/\/$/, "");
-  const KEY = "healthcheck_history_v1";
   const $ = s => document.querySelector(s);
   const $$ = s => document.querySelectorAll(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const NAMA_HALAMAN = { beranda: "Beranda", cek: "Cek Risiko", riwayat: "Riwayat", edukasi: "Edukasi", profil: "Profil", akun: "Akun", admin: "Dasbor Admin" };
   let akun = null;   // pengguna yang sedang login, atau null
+
+  let dipilih = null;   // (admin) pengguna yang riwayatnya sedang dibuka
+  let semuaPengguna = [];   // (admin) daftar pengguna terakhir dari server, untuk fitur cari
 
   /* ---------- panggilan API ---------- */
   async function panggil(path, opsi = {}) {
@@ -30,8 +32,9 @@
 
   /* ---------- navigasi ---------- */
   function page(id) {
-    if (!document.getElementById(id)) id = "beranda";
-    if (id === "admin" && akun?.peran !== "admin") id = akun ? "beranda" : "akun";
+    if (!akun) return;   // belum masuk: tetap di layar login
+    if (!document.getElementById(id) || !document.getElementById(id).classList.contains("page")) id = "beranda";
+    if (id === "admin" && akun.peran !== "admin") id = "beranda";
     $$(".page").forEach(x => x.classList.toggle("active", x.id === id));
     $$("[data-nav]").forEach(x => x.classList.toggle("active", x.dataset.nav === id));
     $("#pageName").textContent = NAMA_HALAMAN[id] || "Beranda";
@@ -51,8 +54,6 @@
   $("#dateText").textContent = now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
   /* ---------- riwayat ---------- */
-  const bacaLokal = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
-  const simpanLokal = a => { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch { /* penyimpanan diblokir */ } };
   const pill = label => `<span class="pill ${label === "Risiko tinggi" ? "high" : "low"}">${esc(label)}</span>`;
 
   function tampilkanRiwayat(baris) {
@@ -63,19 +64,18 @@
   }
 
   async function muatRiwayat() {
-    if (!akun) return tampilkanRiwayat(bacaLokal());
+    if (!akun) return tampilkanRiwayat([]);
     try {
       const d = await panggil("/riwayat");
       tampilkanRiwayat(d.riwayat.map(r => ({ date: r.waktu, age: r.input.age, label: r.label, probability: r.skor })));
     } catch (ex) {
       $("#historyBody").innerHTML = `<tr><td colspan="4" class="empty">${esc(pesanKoneksi(ex))}</td></tr>`;
+      if (ex.status === 401) cekSesi();
     }
   }
 
   $("#clearHistory").addEventListener("click", async () => {
-    const tempat = akun ? "di akun Anda (database)" : "di browser ini";
-    if (!confirm(`Hapus seluruh riwayat pemeriksaan ${tempat}?`)) return;
-    if (!akun) { simpanLokal([]); return muatRiwayat(); }
+    if (!confirm("Hapus seluruh riwayat pemeriksaan di akun Anda (database)?")) return;
     try { await panggil("/riwayat", { method: "DELETE" }); } catch (ex) { alert(pesanKoneksi(ex)); }
     muatRiwayat();
   });
@@ -117,15 +117,11 @@
     try {
       const out = await panggil("/predict", { method: "POST", body: data });
       showResult(out);
-      if (!akun) {
-        const arr = bacaLokal();
-        arr.unshift({ date: new Date().toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }), age: data.age, label: out.label, probability: out.probability });
-        simpanLokal(arr.slice(0, 50));
-      }
       muatRiwayat();
       $("#resultPanel").scrollIntoView({ behavior: "smooth", block: "center" });
     } catch (ex) {
       err.textContent = pesanKoneksi(ex); err.hidden = false;
+      if (ex.status === 401) cekSesi();   // sesi habis atau akun dinonaktifkan: kembali ke layar login
     } finally {
       btn.disabled = false; btn.textContent = "Proses pemeriksaan →";
     }
@@ -141,7 +137,7 @@
 
   function showResult(r) {
     const high = r.label === "Risiko tinggi", p = Math.max(0, Math.min(100, +r.probability * 100)), el = $("#resultPanel");
-    const simpan = r.tersimpan ? "Hasil ini tersimpan di akun Anda." : akun ? "Hasil ini belum tersimpan ke database (database tidak terhubung)." : "Hasil ini hanya tersimpan di browser. Masuk ke akun agar tersimpan di database.";
+    const simpan = r.tersimpan ? "Hasil ini tersimpan di database pada akun Anda." : "Hasil ini belum tersimpan ke database (database tidak terhubung).";
     el.hidden = false;
     el.innerHTML = `<div class="result-top"><span class="result-badge ${high ? "high" : "low"}">${high ? "!" : "✓"}</span><div><p class="eyebrow">HASIL SKRINING AWAL</p><h3>${esc(r.label)}</h3><p>Skor keluaran model: ${p.toFixed(1)}%</p></div></div><div class="scorebar"><div class="scorefill" style="width:${p}%"></div></div><div class="scorecaption"><span>Skor model</span><b>${p.toFixed(1)}%</b></div>${detail(r)}<p class="save-note" id="saveNote">${esc(simpan)}</p><div class="result-note">${esc(r.disclaimer || "Hasil ini merupakan skrining awal, bukan diagnosis medis. Konsultasikan dengan dokter.")}</div><div class="actions"><button class="btn primary" id="seeHistory">Lihat riwayat →</button><button class="btn outline" id="newCheck">Cek kembali</button></div>`;
     $("#seeHistory").onclick = () => page("riwayat");
@@ -149,37 +145,58 @@
   }
 
   /* ---------- akun: masuk, daftar, keluar ---------- */
+  // Belum masuk: hanya layar login (#gate). Sudah masuk: website (#appShell).
   function tampilkanAkun() {
     const masuk = !!akun, admin = akun?.peran === "admin";
     const inisial = masuk ? akun.nama.trim().charAt(0).toUpperCase() : "?";
-    $("#authBox").hidden = masuk;
+    $("#gate").hidden = masuk;
+    $("#appShell").hidden = !masuk;
     $("#accountBox").hidden = !masuk;
     $("#sideUser").hidden = !masuk;
     $("#navAdmin").hidden = !admin;
-    $("#navAkunText").textContent = masuk ? "Akun saya" : "Masuk / Daftar";
     $("#topAvatar").textContent = inisial;
-    $("#akunJudul").textContent = masuk ? "Akun saya" : "Masuk ke HealthCheck";
+    if (!masuk) bersihkanTampilan();
     if (masuk) {
       $("#sideAvatar").textContent = $("#akunAvatar").textContent = inisial;
       $("#sideNama").textContent = $("#akunNama").textContent = akun.nama;
       $("#akunEmail").textContent = akun.email;
       $("#sidePeran").textContent = $("#akunPeran").textContent = admin ? "Admin" : "Pengguna";
     }
-    $("#historyIntro").textContent = masuk ? "Hasil pemeriksaan yang tersimpan di akun Anda." : "Hasil pemeriksaan yang tersimpan pada browser perangkat ini.";
-    $("#historyNote").textContent = masuk ? "Data disimpan di database HealthCheck dan terhubung dengan akun Anda." : "Data disimpan secara lokal di browser. Masuk ke akun agar riwayat tersimpan di database.";
     muatRiwayat();
   }
 
+  // Saat keluar: hapus data orang sebelumnya dari layar, supaya pengguna berikutnya tidak melihatnya.
+  function bersihkanTampilan() {
+    $("#riskForm").reset(); $("#resultPanel").hidden = true; $("#resultPanel").innerHTML = ""; $("#formError").hidden = true;
+    tampilkanRiwayat([]);
+    dipilih = null; $("#adminHistory").hidden = true; $("#ahBody").innerHTML = "";
+    $("#userBody").innerHTML = '<tr><td colspan="7" class="empty">Memuat...</td></tr>';
+    semuaPengguna = []; $("#cariPengguna").value = ""; $("#cariInfo").textContent = "";
+    $("#chartHarian").innerHTML = ""; $("#chartRasio").innerHTML = "";
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+
   async function cekSesi() {
-    try { akun = (await panggil("/auth/saya")).pengguna; } catch { akun = null; }
+    const status = $("#gateStatus");
+    try {
+      akun = (await panggil("/auth/saya")).pengguna;
+      status.hidden = true;
+    } catch (ex) {
+      akun = null;
+      status.textContent = pesanKoneksi(ex); status.hidden = false;
+    }
     tampilkanAkun();
   }
 
   const authError = t => { $("#authInfo").hidden = true; $("#authError").textContent = t; $("#authError").hidden = !t; };
+  let modeLogin = "masuk";   // "masuk" (pengguna), "daftar", atau "admin"
   $$(".tab").forEach(t => t.addEventListener("click", () => {
+    modeLogin = t.dataset.tab;
     $$(".tab").forEach(x => x.classList.toggle("active", x === t));
-    $("#loginForm").hidden = t.dataset.tab !== "masuk";
-    $("#registerForm").hidden = t.dataset.tab !== "daftar";
+    $("#loginForm").hidden = modeLogin === "daftar";
+    $("#registerForm").hidden = modeLogin !== "daftar";
+    $("#adminLoginNote").hidden = modeLogin !== "admin";
+    $("#loginBtn").textContent = modeLogin === "admin" ? "Masuk sebagai admin →" : "Masuk →";
     authError("");
   }));
 
@@ -188,8 +205,8 @@
     authError(""); btn.disabled = true; btn.textContent = "Memproses...";
     try {
       akun = (await panggil(path, { method: "POST", body })).pengguna;
-      form.reset(); tampilkanAkun();
-      page(akun.peran === "admin" ? "admin" : "cek");
+      form.reset(); $("#gateStatus").hidden = true; tampilkanAkun();
+      page(akun.peran === "admin" ? "admin" : "beranda");
     } catch (ex) {
       authError(pesanKoneksi(ex));
     } finally {
@@ -200,7 +217,9 @@
   $("#loginForm").addEventListener("submit", e => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    kirimAuth(e.currentTarget, "/auth/masuk", { email: f.get("email"), password: f.get("password") });
+    const body = { email: f.get("email"), password: f.get("password") };
+    if (modeLogin === "admin") body.sebagai = "admin";   // server menolak bila akun ini bukan admin
+    kirimAuth(e.currentTarget, "/auth/masuk", body);
   });
   $("#registerForm").addEventListener("submit", e => {
     e.preventDefault();
@@ -211,38 +230,68 @@
 
   async function keluar() {
     try { await panggil("/auth/keluar", { method: "POST" }); } catch { /* tetap keluar di tampilan */ }
-    akun = null; tampilkanAkun(); page("beranda");
+    akun = null; tampilkanAkun(); window.scrollTo(0, 0);
   }
   $("#logoutBtn").addEventListener("click", keluar);
   $("#logoutBtn2").addEventListener("click", keluar);
 
   /* ---------- dasbor admin ---------- */
   const adminError = t => { $("#adminError").textContent = t; $("#adminError").hidden = !t; };
-  let dipilih = null;   // pengguna yang riwayatnya sedang dibuka
 
   async function muatAdmin() {
     if (akun?.peran !== "admin") return;
     adminError("");
     try {
-      const [s, u] = await Promise.all([panggil("/admin/statistik"), panggil("/admin/pengguna")]);
+      const [s, u, g] = await Promise.all([panggil("/admin/statistik"), panggil("/admin/pengguna"), panggil("/admin/grafik")]);
       $("#stPengguna").textContent = s.pengguna;
       $("#stAktif").textContent = `${s.pengguna_aktif} aktif`;
       $("#stPemeriksaan").textContent = s.pemeriksaan;
       $("#stMinggu").textContent = `${s.pemeriksaan_7_hari} dalam 7 hari`;
       $("#stTinggi").textContent = `${s.persen_risiko_tinggi}%`;
       $("#stTinggiN").textContent = `${s.risiko_tinggi} pemeriksaan`;
-      $("#userBody").innerHTML = u.pengguna.length ? u.pengguna.map(x => `<tr>
-        <td>${esc(x.nama)}</td><td>${esc(x.email)}</td><td>${x.peran === "admin" ? "Admin" : "Pengguna"}</td>
-        <td><span class="pill ${x.aktif ? "low" : "high"}">${x.aktif ? "Aktif" : "Nonaktif"}</span></td>
-        <td>${x.jumlah_pemeriksaan}</td><td>${esc(x.terakhir || "-")}</td>
-        <td class="aksi"><button class="btn outline small" data-lihat="${x.id}">Riwayat</button>${x.id === akun.id ? "" :
-          `<button class="btn outline small ${x.aktif ? "danger" : ""}" data-status="${x.id}" data-aktif="${x.aktif ? 0 : 1}">${x.aktif ? "Nonaktifkan" : "Aktifkan"}</button>`}</td></tr>`).join("")
-        : '<tr><td colspan="7" class="empty">Belum ada pengguna.</td></tr>';
-      if (dipilih) lihatRiwayat(dipilih);
+      semuaPengguna = u.pengguna;
+      gambarPengguna();
+      gambarGrafik(g);
+      if (dipilih && semuaPengguna.some(x => x.id === dipilih)) lihatRiwayat(dipilih);
+      else { dipilih = null; $("#adminHistory").hidden = true; }
     } catch (ex) {
       adminError(pesanKoneksi(ex));
       if (ex.status === 401 || ex.status === 403) cekSesi();
     }
+  }
+
+  // 2. Tabel pengguna, disaring oleh kotak cari (nama atau email).
+  function gambarPengguna() {
+    const kata = $("#cariPengguna").value.trim().toLowerCase();
+    const daftar = kata ? semuaPengguna.filter(x => x.nama.toLowerCase().includes(kata) || x.email.toLowerCase().includes(kata)) : semuaPengguna;
+    $("#cariInfo").textContent = kata ? `${daftar.length} dari ${semuaPengguna.length} pengguna` : "";
+    $("#userBody").innerHTML = daftar.length ? daftar.map(x => `<tr>
+        <td>${esc(x.nama)}</td><td>${esc(x.email)}</td><td>${x.peran === "admin" ? "Admin" : "Pengguna"}</td>
+        <td><span class="pill ${x.aktif ? "low" : "high"}">${x.aktif ? "Aktif" : "Nonaktif"}</span></td>
+        <td>${x.jumlah_pemeriksaan}</td><td>${esc(x.terakhir || "-")}</td>
+        <td class="aksi"><button class="btn outline small" data-lihat="${x.id}">Riwayat</button>${x.id === akun.id ? "" :
+          `<button class="btn outline small ${x.aktif ? "danger" : ""}" data-status="${x.id}" data-aktif="${x.aktif ? 0 : 1}">${x.aktif ? "Nonaktifkan" : "Aktifkan"}</button>`}${x.peran === "user" ?
+          `<button class="btn outline small danger" data-hapus-akun="${x.id}">Hapus</button>` : ""}</td></tr>`).join("")
+      : `<tr><td colspan="7" class="empty">${kata ? "Tidak ada pengguna yang cocok." : "Belum ada pengguna."}</td></tr>`;
+  }
+  $("#cariPengguna").addEventListener("input", gambarPengguna);
+
+  // 1. Grafik batang 14 hari (rendah + tinggi bertumpuk) dan perbandingan total.
+  function gambarGrafik(g) {
+    const maks = Math.max(1, ...g.harian.map(h => h.tinggi + h.rendah));
+    const terakhir = g.harian.length - 1;
+    $("#chartHarian").innerHTML = g.harian.map((h, i) => {
+      const [, bln, tgl] = h.tanggal.split("-"), n = h.tinggi + h.rendah;
+      return `<div class="bar-col${i === terakhir ? " today" : ""}" title="${esc(h.tanggal)}: ${h.rendah} rendah, ${h.tinggi} tinggi">
+        <b>${n || ""}</b><div class="bar-stack"><i class="high" style="height:${100 * h.tinggi / maks}%"></i><i class="low" style="height:${100 * h.rendah / maks}%"></i></div>
+        <small>${i === terakhir ? "Hari ini" : `${+tgl}/${+bln}`}</small></div>`;
+    }).join("");
+    const t = g.total, semua = t.tinggi + t.rendah;
+    const persen = n => semua ? `${(100 * n / semua).toFixed(1)}%` : "0%";
+    $("#chartRasio").innerHTML = `<div class="ratio-bar">${semua ? `<i class="low" style="width:${100 * t.rendah / semua}%"></i><i class="high" style="width:${100 * t.tinggi / semua}%"></i>` : ""}</div>
+      <div class="ratio-rows"><div><i class="low"></i>Risiko rendah<b>${t.rendah}</b><small>${persen(t.rendah)}</small></div>
+      <div><i class="high"></i>Risiko tinggi<b>${t.tinggi}</b><small>${persen(t.tinggi)}</small></div></div>
+      ${semua ? "" : '<p class="factor-none">Belum ada pemeriksaan.</p>'}`;
   }
 
   async function lihatRiwayat(uid) {
@@ -263,6 +312,15 @@
     const b = e.target.closest("button");
     if (!b) return;
     if (b.dataset.lihat) return lihatRiwayat(+b.dataset.lihat);
+    if (b.dataset.hapusAkun) {
+      const x = semuaPengguna.find(p => p.id === +b.dataset.hapusAkun);
+      if (!x) return;
+      const ketik = prompt(`HAPUS PERMANEN akun "${x.nama}" beserta ${x.jumlah_pemeriksaan} riwayatnya? Tindakan ini tidak bisa dibatalkan.\n\nKetik email pengguna untuk konfirmasi:\n${x.email}`);
+      if (ketik === null) return;
+      if (ketik.trim().toLowerCase() !== x.email) return adminError("Email yang diketik tidak sama. Akun tidak dihapus.");
+      try { await panggil(`/admin/pengguna/${x.id}`, { method: "DELETE", body: { konfirmasi_email: ketik.trim() } }); } catch (ex) { return adminError(pesanKoneksi(ex)); }
+      return muatAdmin();
+    }
     if (b.dataset.status) {
       const aktif = b.dataset.aktif === "1";
       if (!aktif && !confirm("Nonaktifkan akun ini? Pengguna tidak akan bisa masuk.")) return;
@@ -283,6 +341,21 @@
   });
   $("#adminRefresh").addEventListener("click", muatAdmin);
 
+  // 3. Unduh semua riwayat sebagai CSV (file dibuat server, hanya untuk admin).
+  $("#unduhCsv").addEventListener("click", async () => {
+    const btn = $("#unduhCsv");
+    adminError(""); btn.disabled = true; btn.textContent = "Menyiapkan...";
+    try {
+      const r = await fetch(API + "/admin/ekspor.csv", { credentials: "include" });
+      if (!r.ok) { let d = {}; try { d = await r.json(); } catch { /* kosong */ } throw new Error(d.error || "Gagal mengunduh CSV."); }
+      const url = URL.createObjectURL(await r.blob()), a = document.createElement("a");
+      a.href = url; a.download = `riwayat_healthcheck_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (ex) { adminError(pesanKoneksi(ex)); }
+    finally { btn.disabled = false; btn.textContent = "Unduh CSV"; }
+  });
+
   /* ---------- status API & mulai ---------- */
   async function cekApi() {
     const el = $("#apiStatus");
@@ -291,8 +364,6 @@
   }
 
   cekApi();
-  cekSesi().then(() => {
-    const awal = location.hash.slice(1);
-    if (awal && document.getElementById(awal)) page(awal);
-  });
+  const awal = location.hash.slice(1);
+  cekSesi().then(() => { if (akun) page(awal || "beranda"); });
 })();
