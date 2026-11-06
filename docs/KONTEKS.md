@@ -52,11 +52,14 @@ Dokumen ini adalah memori jangka panjang proyek. Perbarui bagian "Status" setiap
 - Permintaan: perindah tampilan dengan ilustrasi keluarga dan darah TANPA mengubah struktur halaman Figma dan tanpa mengubah algoritma.
 - Aset ilustrasi SVG sudah pernah dibuat (7 file, folder `ilustrasi-ruanggula/`). Pakai ulang bila ada.
 
-## 6. Rencana login + MySQL (belum diputuskan)
-- Rekomendasi: login opsional. Prediksi tetap bisa tanpa login; login hanya untuk menyimpan riwayat.
-- Tabel: `users(id, nama, email unik, password_hash, dibuat)` dan `riwayat(id, user_id, input JSON, skor, label, waktu)`.
-- Keamanan: hash kata sandi (werkzeug), query berparameter, kredensial di `.env` (masuk `.gitignore`), CORS dengan cookie bila memakai sesi.
-- Tanyakan dulu apakah MySQL/XAMPP sudah terpasang. Bila riwayat disimpan, ubah teks "data tidak disimpan" dan tambahkan persetujuan pengguna (data kesehatan).
+## 6. Login + MySQL (diputuskan Tresure 2026-11-06, dikerjakan di cabang `fitur-login`)
+- Keputusan: cek risiko TIDAK wajib login. Saat login, hasil cek risiko disimpan ke MySQL. Yang disimpan: akun + riwayat (input 7 fitur, skor, label, waktu).
+- Admin bisa: lihat daftar pengguna, statistik (jumlah pengguna, pemeriksaan, % risiko tinggi, 7 hari), lihat/hapus riwayat pengguna, nonaktifkan/aktifkan akun. Admin tidak bisa daftar lewat website; dibuat dengan `python buat_admin.py`.
+- Tabel (`schema.sql`): `users(id, nama, email unik, password_hash, peran user/admin, aktif, setuju_simpan, dibuat)` dan `riwayat(id, user_id FK ON DELETE CASCADE, input JSON, skor, label, waktu)`.
+- Keamanan: hash werkzeug (scrypt), query berparameter, sesi cookie HttpOnly SameSite=Lax, CORS hanya 127.0.0.1:5500/localhost:5500 dengan credentials, batas 5 login gagal per 15 menit (memori), persetujuan wajib saat daftar, user MySQL khusus `healthcheck` (hanya SELECT/INSERT/UPDATE/DELETE di database healthcheck), kredensial di `.env`.
+- Lingkungan: XAMPP di `C:\xampp`, MariaDB 10.4.32. `mysql.db` sempat rusak dan diperbaiki (lihat CLAUDE.md).
+- Pengujian 2026-11-06: `test_api.py` tetap sama (skor 1%/99%/98%); `test_auth.py` 33/33 lulus (dua kali berturut-turut); uji tampilan Edge (tamu, daftar, cek tersimpan, user ditolak dari admin, keluar, masuk admin, statistik, riwayat, nonaktif/aktif, hapus) semua sesuai; MySQL mati: cek risiko tamu tetap jalan, login 503 dengan pesan jelas.
+- Belum: SRS perlu diperbarui (fitur login/admin, karakteristik pengguna admin, ERD, kasus uji baru).
 
 ## 7. Kolaborasi GitHub
 - Satu repo, cabang per anggota/fitur, pull request untuk digabung.
@@ -67,7 +70,7 @@ Dokumen ini adalah memori jangka panjang proyek. Perbarui bagian "Status" setiap
 ## 8. Pertanyaan terbuka
 1. Apakah dosen mengizinkan tidak memakai kolom HbA1c?
 2. Hasil metrik asli pada Diabetes Prediction Dataset?
-3. Scope login/MySQL: perlu atau tidak, siapa yang mengerjakan?
+3. ~~Scope login/MySQL?~~ Terjawab 2026-11-06: login opsional + MySQL + admin (lihat Bagian 6).
 4. ~~Nama akhir?~~ Terjawab: "HealthCheck" (2026-11-05).
 5. Apakah akan di-deploy (opsional) atau cukup berjalan lokal?
 
@@ -93,7 +96,9 @@ Dokumen ini adalah memori jangka panjang proyek. Perbarui bagian "Status" setiap
 - [x] Faktor risiko utama + rekomendasi di hasil (2026-11-05). `/predict` kini juga mengirim `faktor` (maks. 3, dihitung dari koefisien Logistic Regression dibanding acuan: rata-rata data latih untuk usia/BMI/gula, "tidak" untuk hipertensi/jantung, "never" untuk merokok; gender tidak ditampilkan; batas 0,1) dan `rekomendasi` (saran umum berbasis aturan). Skor/label tidak berubah. Diuji: `test_api.py` lulus, tampilan diuji di Edge.
 - [ ] Konfirmasi dosen
 - [ ] Desain Figma diterapkan
-- [ ] Login + MySQL
+- [x] Login + MySQL + Dasbor Admin (2026-11-06, cabang `fitur-login`; semua uji lulus, lihat Bagian 6). Belum digabung ke `main`.
+- [ ] Perbarui SRS untuk fitur login/admin
+- [ ] Perindah tampilan (efek dan animasi)
 - [x] GitHub: folder tersambung ke repo, commit `cf546e9` di-push 2026-11-06 (push memakai akun Adityaputt, kolaborator).
 - [~] SRS: `docs/SRS_HealthCheck.docx` versi 1.0 dibuat 2026-11-06 (22 halaman; struktur dari contoh di `docs/referensi/`, tidak di-upload). Uji no. 16 (hapus riwayat) dan 17 (API mati) sudah dijalankan otomatis di Edge dan lulus; 17/17 kasus lulus. Masih perlu diisi manual oleh kelompok: NIM, dosen pengampu, logo kampus. Diagram dan dokumen dibuat dengan skrip di `D:\donwload\_alat-srs\` (di luar repo).
 - [ ] ADR (Architecture Decision Record, template di `docs/referensi/`): dikerjakan oleh anggota kelompok lain; ditunda di sini.
