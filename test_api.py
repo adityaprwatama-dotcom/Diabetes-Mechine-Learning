@@ -20,14 +20,29 @@ KASUS = {
     "Gula darah bukan angka": {**SEHAT, "blood_glucose_level": "abc"},
     "Usia tidak masuk akal": {**SEHAT, "age": 0},
 }
+gagal = []
 for nama, data in KASUS.items():
     req = urllib.request.Request(URL, json.dumps(data).encode(), {"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req) as r:
             h = json.load(r)
             print(f"[{r.status}] {nama}: {h['label']} (skor {h['probability']:.0%})")
+            for f in h.get("faktor", []):
+                print(f"        faktor: {f['teks']}")
+            print(f"        rekomendasi: {len(h.get('rekomendasi', []))} saran")
+            if not h.get("rekomendasi"):
+                gagal.append(f"{nama}: rekomendasi kosong")
+            if nama != "Perempuan sehat":
+                fitur_faktor = [f["fitur"] for f in h.get("faktor", [])]
+                if "blood_glucose_level" not in fitur_faktor or "hypertension" not in fitur_faktor:
+                    gagal.append(f"{nama}: gula darah dan hipertensi seharusnya muncul sebagai faktor")
+            elif h.get("faktor"):
+                gagal.append(f"{nama}: orang sehat seharusnya tidak punya faktor yang menonjol")
     except urllib.error.HTTPError as e:
         print(f"[{e.code}] {nama}: {json.load(e)['error']}")
     except urllib.error.URLError:
         print("Server belum berjalan. Jalankan dulu: python app.py")
+        gagal.append("server tidak berjalan")
         break
+
+print("\nSEMUA PENGECEKAN FAKTOR/REKOMENDASI LULUS" if not gagal else "\nGAGAL:\n- " + "\n- ".join(gagal))

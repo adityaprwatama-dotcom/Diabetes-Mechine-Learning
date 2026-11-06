@@ -25,6 +25,75 @@ RENTANG = {"age": (1, 120), "bmi": (10, 70), "HbA1c_level": (3, 15), "blood_gluc
 NAMA = {"gender": "Jenis kelamin", "age": "Usia", "hypertension": "Hipertensi", "heart_disease": "Penyakit jantung",
         "smoking_history": "Riwayat merokok", "bmi": "BMI", "HbA1c_level": "HbA1c", "blood_glucose_level": "Gula darah"}
 DISCLAIMER = "Hasil ini adalah skrining awal berbasis AI, bukan diagnosis medis. Konsultasikan dengan dokter."
+NAMA_MEROKOK = {"never": "tidak pernah merokok", "current": "perokok aktif", "former": "mantan perokok",
+                "not current": "saat ini tidak merokok", "ever": "pernah merokok", "No Info": "tidak ada informasi"}
+BATAS_FAKTOR = 0.1   # faktor dengan kontribusi lebih kecil dari ini dianggap tidak menonjol
+
+
+def hitung_faktor(nilai):
+    """Faktor yang paling MENAIKKAN skor dibanding titik acuan.
+
+    Acuan: usia, BMI, gula darah = rata-rata data latih; hipertensi dan penyakit jantung = tidak;
+    merokok = tidak pernah; jenis kelamin = sama dengan pengguna (jadi tidak pernah menjadi faktor).
+    Kontribusi = koefisien Logistic Regression x selisih nilai (setelah praproses) terhadap acuan.
+    Hanya membaca model; skor dan label tidak berubah.
+    """
+    praproses, clf = model.named_steps["praproses"], model.named_steps["clf"]
+    if not hasattr(clf, "coef_"):
+        return []
+    skaler = praproses.named_transformers_["angka"]
+    rata = dict(zip(skaler.feature_names_in_, skaler.mean_))
+    acuan = {**nilai, "hypertension": 0, "heart_disease": 0, "smoking_history": "never", **rata}
+    selisih = (praproses.transform(pd.DataFrame([nilai], columns=FITUR))
+               - praproses.transform(pd.DataFrame([acuan], columns=FITUR)))[0] * clf.coef_[0]
+    kontribusi = dict.fromkeys(FITUR, 0.0)
+    for nama_kolom, s in zip(praproses.get_feature_names_out(), selisih):
+        asal = nama_kolom.split("__", 1)[1]
+        kontribusi[next(k for k in FITUR if asal == k or asal.startswith(k + "_"))] += s
+
+    def teks(k):
+        v = nilai[k]
+        if k == "blood_glucose_level":
+            return f"Gula darah {v:g} mg/dL (rata-rata data: {rata[k]:.0f} mg/dL)"
+        if k == "age":
+            return f"Usia {v:g} tahun (rata-rata data: {rata[k]:.0f} tahun)"
+        if k == "bmi":
+            return f"BMI {v:.1f} (rata-rata data: {rata[k]:.1f})"
+        if k == "hypertension":
+            return "Pernah didiagnosis hipertensi"
+        if k == "heart_disease":
+            return "Pernah didiagnosis penyakit jantung"
+        return f"Riwayat merokok: {NAMA_MEROKOK.get(v, v)}"
+
+    urut = sorted((k for k in FITUR if k != "gender" and kontribusi[k] > BATAS_FAKTOR),
+                  key=lambda k: kontribusi[k], reverse=True)
+    return [{"fitur": k, "teks": teks(k), "kontribusi": round(float(kontribusi[k]), 3)} for k in urut[:3]]
+
+
+def buat_rekomendasi(nilai, tinggi):
+    """Saran umum (bukan resep medis) berdasarkan hasil dan isian."""
+    saran = []
+    if tinggi:
+        saran.append("Skor Anda tergolong tinggi. Periksakan diri ke dokter atau puskesmas untuk tes lanjutan, "
+                     "misalnya gula darah puasa atau HbA1c.")
+    g = nilai["blood_glucose_level"]
+    if g >= 200:
+        saran.append("Kadar gula darah Anda 200 mg/dL atau lebih. Angka ini sangat tinggi; segera konsultasikan ke dokter.")
+    elif g >= 126:
+        saran.append("Bila gula darah ini diukur saat puasa, angka 126 mg/dL atau lebih perlu diperiksakan ke dokter. "
+                     "Kurangi minuman manis dan pantau gula darah secara berkala.")
+    b = nilai["bmi"]
+    if b >= 30:
+        saran.append("BMI Anda termasuk obesitas. Turunkan berat badan secara bertahap dengan pola makan teratur dan aktif bergerak.")
+    elif b >= 25:
+        saran.append("BMI Anda termasuk berat badan berlebih. Jaga porsi makan dan tambah aktivitas fisik.")
+    if nilai["smoking_history"] == "current":
+        saran.append("Berhenti merokok dapat menurunkan risiko diabetes dan penyakit jantung. Puskesmas dapat membantu program berhenti merokok.")
+    if nilai["hypertension"] == 1 or nilai["heart_disease"] == 1:
+        saran.append("Lanjutkan kontrol rutin tekanan darah dan jantung sesuai anjuran dokter.")
+    saran.append("Jaga pola makan seimbang (perbanyak sayur, batasi gula dan gorengan) dan aktif bergerak "
+                 "sekitar 150 menit per minggu.")
+    return saran
 
 app = Flask(__name__)
 CORS(app)
@@ -73,6 +142,8 @@ def predict():
         "label": "Risiko tinggi" if tinggi else "Risiko rendah",
         "probability": round(skor, 4),     # skor risiko model (bukan peluang pasti)
         "confidence": round(skor if tinggi else 1 - skor, 4),
+        "faktor": hitung_faktor(nilai),            # maksimal 3 faktor yang paling menaikkan skor
+        "rekomendasi": buat_rekomendasi(nilai, tinggi),
         "disclaimer": DISCLAIMER,
     })
 

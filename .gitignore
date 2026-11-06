@@ -1,0 +1,19 @@
+# File sementara Python
+__pycache__/
+*.pyc
+
+# Lingkungan virtual
+venv/
+.venv/
+
+# Kata sandi dan kunci (JANGAN pernah di-upload)
+.env
+
+# File sistem
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Catatan: dataset/diabetes_prediction_dataset.csv dan model_diabetes.pkl
+# SENGAJA tetap di-upload (keputusan kelompok 2026-11-06), supaya anggota bisa
+# langsung menjalankan proyek tanpa mengunduh dataset atau melatih ulang.
