@@ -9,6 +9,12 @@ venv/
 # Kata sandi dan kunci (JANGAN pernah di-upload)
 .env
 
+# Dokumen milik pihak lain (contoh SRS acuan), tidak di-upload ke repo public
+docs/referensi/
+
+# File kunci sementara Microsoft Word
+~$*
+
 # File sistem
 Thumbs.db
 desktop.ini

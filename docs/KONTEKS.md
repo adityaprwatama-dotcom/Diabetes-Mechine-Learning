@@ -94,4 +94,7 @@ Dokumen ini adalah memori jangka panjang proyek. Perbarui bagian "Status" setiap
 - [ ] Konfirmasi dosen
 - [ ] Desain Figma diterapkan
 - [ ] Login + MySQL
-- [ ] SRS dan laporan
+- [x] GitHub: folder tersambung ke repo, commit `cf546e9` di-push 2026-11-06 (push memakai akun Adityaputt, kolaborator).
+- [~] SRS: `docs/SRS_HealthCheck.docx` versi 1.0 dibuat 2026-11-06 (22 halaman; struktur dari contoh di `docs/referensi/`, tidak di-upload). Uji no. 16 (hapus riwayat) dan 17 (API mati) sudah dijalankan otomatis di Edge dan lulus; 17/17 kasus lulus. Masih perlu diisi manual oleh kelompok: NIM, dosen pengampu, logo kampus. Diagram dan dokumen dibuat dengan skrip di `D:\donwload\_alat-srs\` (di luar repo).
+- [ ] ADR (Architecture Decision Record, template di `docs/referensi/`): dikerjakan oleh anggota kelompok lain; ditunda di sini.
+- [ ] Laporan
