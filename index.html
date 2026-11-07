@@ -5,26 +5,38 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css"></head><body>
 <div class="gate" id="gate">
-<div class="gate-inner">
+<div class="gate-split">
+<section class="gate-form-side"><div class="gate-card">
 <div class="gate-head"><span class="brand-icon">✚</span><div><b>HealthCheck</b><small>DIABETES CARE</small></div></div>
-<div class="intro"><p class="eyebrow">SELAMAT DATANG</p><h1>Masuk ke HealthCheck</h1><p>Masuk atau buat akun terlebih dahulu untuk memakai cek risiko diabetes. Semua hasil pemeriksaan disimpan di database HealthCheck pada akun Anda.</p></div>
+<h1 class="gate-title">Masuk ke HealthCheck</h1>
+<p class="gate-sub">Cek risiko diabetes dan simpan riwayatnya di akun Anda.</p>
 <div class="gate-status" id="gateStatus" hidden></div>
-<div class="auth-layout" id="authBox"><article class="panel auth-panel">
+<div class="auth-box" id="authBox">
 <div class="tabs" role="tablist"><button class="tab active" type="button" data-tab="masuk">Masuk</button><button class="tab" type="button" data-tab="daftar">Daftar</button><button class="tab" type="button" data-tab="admin">Admin</button></div>
 <form id="loginForm" class="auth-form"><p class="admin-note" id="adminLoginNote" hidden>Khusus admin. Akun admin dibuat oleh pengelola (perintah <code>python buat_admin.py</code>) dan tidak bisa didaftarkan dari website. Pengguna biasa silakan memakai tab Masuk.</p><div class="fields one">
 <label>Email<input name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></label>
-<label>Kata sandi<input name="password" type="password" autocomplete="current-password" minlength="8" required></label></div>
+<label>Kata sandi<input name="password" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label></div>
 <div class="actions"><button class="btn primary" type="submit" id="loginBtn">Masuk →</button></div></form>
 <form id="registerForm" class="auth-form" hidden><div class="fields one">
 <label>Nama lengkap<input name="nama" type="text" autocomplete="name" minlength="2" maxlength="100" required></label>
 <label>Email<input name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></label>
-<label>Kata sandi<input name="password" type="password" autocomplete="new-password" minlength="8" required><small>Minimal 8 karakter.</small></label>
-<label>Ulangi kata sandi<input name="password2" type="password" autocomplete="new-password" minlength="8" required></label></div>
+<div class="field-pair"><label>Kata sandi<input name="password" type="password" autocomplete="new-password" minlength="8" required><small>Minimal 8 karakter.</small></label>
+<label>Ulangi kata sandi<input name="password2" type="password" autocomplete="new-password" minlength="8" required></label></div></div>
 <label class="consent"><input type="checkbox" name="setuju" required><span>Saya setuju hasil cek risiko saya (tanggal, data isian, skor, dan label) <b>disimpan di database HealthCheck</b> dan dapat dilihat admin. Saya dapat menghapus riwayat kapan saja.</span></label>
 <div class="actions"><button class="btn primary" type="submit">Buat akun →</button></div></form>
-<div class="error" id="authError" hidden></div><div class="success" id="authInfo" hidden></div></article>
-<aside class="panel info"><p class="eyebrow">KENAPA PERLU AKUN?</p><h3>Riwayat tersimpan di satu tempat.</h3><ul><li>Setiap hasil cek risiko tersimpan di database pada akun Anda, tidak hilang saat browser dibersihkan.</li><li>Anda dapat menghapus riwayat kapan saja dari halaman Riwayat.</li><li>Kata sandi disimpan dalam bentuk hash, bukan teks asli.</li><li>Akun admin dibuat oleh pengelola, tidak bisa didaftarkan dari halaman ini.</li></ul><div class="warning">Hasil tetap hanya untuk skrining awal, bukan diagnosis medis.</div></aside></div>
+<div class="error" id="authError" hidden></div><div class="success" id="authInfo" hidden></div></div>
 <p class="disclaimer">HealthCheck merupakan alat skrining awal dan bukan pengganti diagnosis dokter.</p>
+</div></section>
+<aside class="gate-visual">
+<div class="grain" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i></div>
+<div class="gate-visual-inner">
+<p class="gate-tag">SKRINING DIABETES BERBASIS MACHINE LEARNING</p>
+<h2>Kenali risikomu,<br>jaga sehatmu.</h2>
+<div class="gate-points">
+<p class="eyebrow">KENAPA PERLU AKUN?</p>
+<ul><li>Setiap hasil cek risiko tersimpan di database pada akun Anda, tidak hilang saat browser dibersihkan.</li><li>Anda dapat menghapus riwayat kapan saja dari halaman Riwayat.</li><li>Kata sandi disimpan dalam bentuk hash, bukan teks asli.</li><li>Akun admin dibuat oleh pengelola, tidak bisa didaftarkan dari halaman ini.</li></ul>
+<span class="gate-chip">Hasil hanya untuk skrining awal, bukan diagnosis medis.</span>
+</div></div></aside>
 </div></div>
 <div class="shell" id="appShell" hidden>
 <aside class="sidebar" id="sidebar">
