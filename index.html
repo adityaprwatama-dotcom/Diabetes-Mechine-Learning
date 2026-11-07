@@ -4,7 +4,29 @@
 <meta name="theme-color" content="#087f69"><title>HealthCheck — Cek Risiko Diabetes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css"></head><body>
-<div class="shell">
+<div class="gate" id="gate">
+<div class="gate-inner">
+<div class="gate-head"><span class="brand-icon">✚</span><div><b>HealthCheck</b><small>DIABETES CARE</small></div></div>
+<div class="intro"><p class="eyebrow">SELAMAT DATANG</p><h1>Masuk ke HealthCheck</h1><p>Masuk atau buat akun terlebih dahulu untuk memakai cek risiko diabetes. Semua hasil pemeriksaan disimpan di database HealthCheck pada akun Anda.</p></div>
+<div class="gate-status" id="gateStatus" hidden></div>
+<div class="auth-layout" id="authBox"><article class="panel auth-panel">
+<div class="tabs" role="tablist"><button class="tab active" type="button" data-tab="masuk">Masuk</button><button class="tab" type="button" data-tab="daftar">Daftar</button><button class="tab" type="button" data-tab="admin">Admin</button></div>
+<form id="loginForm" class="auth-form"><p class="admin-note" id="adminLoginNote" hidden>Khusus admin. Akun admin dibuat oleh pengelola (perintah <code>python buat_admin.py</code>) dan tidak bisa didaftarkan dari website. Pengguna biasa silakan memakai tab Masuk.</p><div class="fields one">
+<label>Email<input name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></label>
+<label>Kata sandi<input name="password" type="password" autocomplete="current-password" minlength="8" required></label></div>
+<div class="actions"><button class="btn primary" type="submit" id="loginBtn">Masuk →</button></div></form>
+<form id="registerForm" class="auth-form" hidden><div class="fields one">
+<label>Nama lengkap<input name="nama" type="text" autocomplete="name" minlength="2" maxlength="100" required></label>
+<label>Email<input name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></label>
+<label>Kata sandi<input name="password" type="password" autocomplete="new-password" minlength="8" required><small>Minimal 8 karakter.</small></label>
+<label>Ulangi kata sandi<input name="password2" type="password" autocomplete="new-password" minlength="8" required></label></div>
+<label class="consent"><input type="checkbox" name="setuju" required><span>Saya setuju hasil cek risiko saya (tanggal, data isian, skor, dan label) <b>disimpan di database HealthCheck</b> dan dapat dilihat admin. Saya dapat menghapus riwayat kapan saja.</span></label>
+<div class="actions"><button class="btn primary" type="submit">Buat akun →</button></div></form>
+<div class="error" id="authError" hidden></div><div class="success" id="authInfo" hidden></div></article>
+<aside class="panel info"><p class="eyebrow">KENAPA PERLU AKUN?</p><h3>Riwayat tersimpan di satu tempat.</h3><ul><li>Setiap hasil cek risiko tersimpan di database pada akun Anda, tidak hilang saat browser dibersihkan.</li><li>Anda dapat menghapus riwayat kapan saja dari halaman Riwayat.</li><li>Kata sandi disimpan dalam bentuk hash, bukan teks asli.</li><li>Akun admin dibuat oleh pengelola, tidak bisa didaftarkan dari halaman ini.</li></ul><div class="warning">Hasil tetap hanya untuk skrining awal, bukan diagnosis medis.</div></aside></div>
+<p class="disclaimer">HealthCheck merupakan alat skrining awal dan bukan pengganti diagnosis dokter.</p>
+</div></div>
+<div class="shell" id="appShell" hidden>
 <aside class="sidebar" id="sidebar">
 <a class="brand" href="#beranda"><span class="brand-icon">✚</span><span><b>HealthCheck</b><small>DIABETES CARE</small></span></a>
 <p class="side-label">MENU UTAMA</p><nav>
@@ -12,11 +34,14 @@
 <a class="nav-link" data-nav="cek" href="#cek"><i>✚</i>Cek Risiko</a>
 <a class="nav-link" data-nav="riwayat" href="#riwayat"><i>◷</i>Riwayat</a>
 <a class="nav-link" data-nav="edukasi" href="#edukasi"><i>▤</i>Edukasi</a>
-<a class="nav-link" data-nav="profil" href="#profil"><i>◎</i>Profil</a></nav>
+<a class="nav-link" data-nav="profil" href="#profil"><i>◎</i>Profil</a>
+<a class="nav-link" data-nav="akun" href="#akun" id="navAkun"><i>⚿</i><span id="navAkunText">Akun saya</span></a>
+<a class="nav-link" data-nav="admin" href="#admin" id="navAdmin" hidden><i>▦</i>Dasbor Admin</a></nav>
+<div class="side-user" id="sideUser" hidden><span class="avatar" id="sideAvatar">A</span><div><b id="sideNama">-</b><small id="sidePeran">-</small></div><button class="btn outline small" id="logoutBtn" type="button">Keluar</button></div>
 <div class="side-help"><span>✦</span><b>Jaga kesehatanmu</b><p>Kenali faktor risiko dan mulai langkah hidup lebih sehat.</p><a href="#edukasi">Baca tips kesehatan →</a></div>
 <div class="side-foot">● Sistem skrining siap digunakan</div></aside>
 <main class="main">
-<header class="topbar"><button class="mobile-menu" id="menuToggle">☰</button><div class="crumb">HealthCheck <span>/</span> <b id="pageName">Beranda</b></div><div class="top-right"><small id="todayLabel"></small><span class="avatar">A</span></div></header>
+<header class="topbar"><button class="mobile-menu" id="menuToggle">☰</button><div class="crumb">HealthCheck <span>/</span> <b id="pageName">Beranda</b></div><div class="top-right"><small id="todayLabel"></small><a class="avatar" id="topAvatar" href="#akun" title="Akun">?</a></div></header>
 
 <section class="page active" id="beranda">
 <div class="welcome"><div><p class="eyebrow">● HEALTHY LIVING STARTS HERE</p><h1>Halo, selamat datang! <em>✦</em></h1><p>Kenali risiko diabetes lebih awal dan mulai jaga kesehatan dari sekarang.</p></div><span class="date-chip" id="dateText"></span></div>
@@ -49,7 +74,7 @@
 <aside class="panel info"><div class="medical-art"><span>♥</span><i></i></div><p class="eyebrow">SEBELUM MEMULAI</p><h3>Pastikan data yang kamu masukkan sesuai.</h3><ul><li>Gunakan hasil pemeriksaan gula darah yang tersedia.</li><li>Masukkan berat dan tinggi badan terkini.</li><li>Jangan mengira-ngira data medis.</li></ul><div class="warning">Hasil prediksi hanya untuk edukasi dan skrining awal, bukan diagnosis medis.</div></aside></div>
 <div class="panel result" id="resultPanel" hidden></div></section>
 
-<section class="page" id="riwayat"><div class="intro"><p class="eyebrow">CATATAN PEMERIKSAAN</p><h1>Riwayat Pemeriksaan</h1><p>Hasil pemeriksaan yang tersimpan pada browser perangkat ini.</p></div><article class="panel"><div class="panel-head"><div><h3>Riwayat skrining</h3><p>Data disimpan secara lokal di browser.</p></div><button class="btn outline small" id="clearHistory">Hapus riwayat</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Usia</th><th>Hasil</th><th>Skor model</th></tr></thead><tbody id="historyBody"><tr><td colspan="4" class="empty">Belum ada riwayat pemeriksaan.</td></tr></tbody></table></div></article></section>
+<section class="page" id="riwayat"><div class="intro"><p class="eyebrow">CATATAN PEMERIKSAAN</p><h1>Riwayat Pemeriksaan</h1><p id="historyIntro">Hasil pemeriksaan yang tersimpan di akun Anda.</p></div><article class="panel"><div class="panel-head"><div><h3>Riwayat skrining</h3><p id="historyNote">Data disimpan di database HealthCheck dan terhubung dengan akun Anda.</p></div><button class="btn outline small" id="clearHistory">Hapus riwayat</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Usia</th><th>Hasil</th><th>Skor model</th></tr></thead><tbody id="historyBody"><tr><td colspan="4" class="empty">Belum ada riwayat pemeriksaan.</td></tr></tbody></table></div></article></section>
 
 <section class="page" id="edukasi"><div class="intro"><p class="eyebrow">KENALI & CEGAH</p><h1>Edukasi Kesehatan</h1><p>Informasi umum untuk membantu memahami diabetes dan kebiasaan hidup sehat.</p></div><div class="edu-grid">
 <article class="edu-card green"><span>♡</span><small>01 / KENALI</small><h3>Apa itu diabetes?</h3><p>Diabetes adalah kondisi ketika kadar glukosa dalam darah terlalu tinggi karena gangguan produksi atau kerja insulin.</p></article>
@@ -57,6 +82,22 @@
 <article class="edu-card blue"><span>✚</span><small>03 / LAKUKAN</small><h3>Jaga pola hidup</h3><p>Konsumsi makanan seimbang, rutin bergerak, tidur cukup, dan konsultasikan pemeriksaan dengan tenaga kesehatan.</p></article></div><div class="panel edu-note"><b>Ingat:</b> Diabetes tidak dapat dipastikan hanya dari gejala atau hasil prediksi aplikasi. Diagnosis memerlukan pemeriksaan medis.</div></section>
 
 <section class="page" id="profil"><div class="intro"><p class="eyebrow">TENTANG APLIKASI</p><h1>Profil HealthCheck</h1><p>Informasi sistem dan teknologi yang digunakan dalam proyek ini.</p></div><div class="profile-grid"><article class="panel profile-card"><span class="profile-logo">✚</span><h2>HealthCheck</h2><p>Sistem skrining awal risiko diabetes berbasis machine learning.</p><div class="meta"><span>Nama model</span><b>Logistic Regression</b><span>Backend</span><b>Python + Flask API</b><span>Frontend</span><b>HTML, CSS, JavaScript</b><span>Endpoint</span><b>POST /predict</b></div></article><article class="panel"><p class="eyebrow">BATASAN SISTEM</p><h3>Gunakan hasil dengan bijak</h3><p>Model menghasilkan kategori dan skor berdasarkan tujuh fitur masukan. Skor model bukan peluang pasti seseorang menderita diabetes.</p><p>Untuk mengetahui kondisi kesehatan, lakukan pemeriksaan laboratorium dan konsultasi dengan dokter atau tenaga kesehatan.</p><div class="api-status" id="apiStatus">Memeriksa koneksi API...</div></article></div></section>
+
+<section class="page" id="akun"><div class="intro"><p class="eyebrow">AKUN PENGGUNA</p><h1 id="akunJudul">Akun saya</h1><p>Informasi akun yang sedang Anda pakai.</p></div>
+<div class="profile-grid" id="accountBox" hidden><article class="panel profile-card"><span class="profile-logo" id="akunAvatar">A</span><h2 id="akunNama">-</h2><p id="akunEmail">-</p><div class="meta"><span>Peran</span><b id="akunPeran">-</b><span>Riwayat</span><b>Tersimpan di database</b></div><div class="actions center"><a class="btn outline" href="#riwayat">Lihat riwayat</a><button class="btn primary" type="button" id="logoutBtn2">Keluar</button></div></article>
+<article class="panel"><p class="eyebrow">PRIVASI</p><h3>Data Anda</h3><p>Setiap hasil cek risiko disimpan di database bersama tanggal dan data isian. Anda dapat menghapus seluruh riwayat dari halaman Riwayat.</p></article></div></section>
+
+<section class="page" id="admin"><div class="intro"><p class="eyebrow">KHUSUS ADMIN</p><h1>Dasbor Admin</h1><p>Statistik pemeriksaan dan pengelolaan pengguna.</p></div>
+<div class="stats" id="adminStats">
+<article><span class="stat-icon mint">☺</span><div><small>Pengguna</small><b id="stPengguna">0</b><small id="stAktif">0 aktif</small></div></article>
+<article><span class="stat-icon blue">✚</span><div><small>Pemeriksaan</small><b id="stPemeriksaan">0</b><small id="stMinggu">0 dalam 7 hari</small></div></article>
+<article><span class="stat-icon yellow">!</span><div><small>Risiko tinggi</small><b id="stTinggi">0%</b><small id="stTinggiN">0 pemeriksaan</small></div></article></div>
+<div class="chart-grid"><article class="panel"><div class="panel-head"><div><h3>Pemeriksaan 14 hari terakhir</h3><p>Jumlah pemeriksaan per hari, dibagi menurut hasil.</p></div><div class="legend"><span><i class="low"></i>Risiko rendah</span><span><i class="high"></i>Risiko tinggi</span></div></div><div class="bar-chart" id="chartHarian"></div></article><article class="panel"><div class="panel-head"><div><h3>Perbandingan hasil</h3><p>Seluruh pemeriksaan yang tersimpan.</p></div></div><div class="ratio" id="chartRasio"></div></article></div>
+<article class="panel"><div class="panel-head"><div><h3>Daftar pengguna</h3><p>Klik "Riwayat" untuk melihat hasil pemeriksaan seorang pengguna.</p></div><div class="head-actions"><button class="btn outline small" id="unduhCsv" type="button">Unduh CSV</button><button class="btn outline small" id="adminRefresh" type="button">Muat ulang</button></div></div><div class="admin-tools"><input type="search" id="cariPengguna" placeholder="Cari nama atau email..." autocomplete="off" aria-label="Cari pengguna"><small id="cariInfo"></small></div><p class="csv-note">File CSV berisi data kesehatan seluruh pengguna. Simpan baik-baik dan jangan disebarkan.</p>
+<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Peran</th><th>Status</th><th>Pemeriksaan</th><th>Terakhir</th><th>Aksi</th></tr></thead><tbody id="userBody"><tr><td colspan="7" class="empty">Memuat...</td></tr></tbody></table></div></article>
+<article class="panel admin-history" id="adminHistory" hidden><div class="panel-head"><div><h3 id="ahJudul">Riwayat pengguna</h3><p id="ahEmail"></p></div><button class="btn outline small danger" id="ahHapusSemua" type="button">Hapus semua riwayat</button></div>
+<div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Usia</th><th>Gula darah</th><th>BMI</th><th>Hasil</th><th>Skor</th><th>Aksi</th></tr></thead><tbody id="ahBody"></tbody></table></div></article>
+<div class="error" id="adminError" hidden></div></section>
 <footer>© 2026 HealthCheck <span>Proyek edukasi · Bukan alat diagnosis medis</span></footer>
 </main></div>
 <script src="js/config.js"></script><script src="js/questions.js"></script><script src="js/app.js"></script></body></html>

@@ -16,29 +16,37 @@ Riwayat keputusan, metrik, desain Figma, dan daftar tugas: @docs/KONTEKS.md
 
 ## Aturan proyek (jangan dilanggar)
 1. **Fitur di form harus sesuai kolom dataset** (aturan dosen). Setiap pertanyaan di form dipetakan ke satu kolom dataset. Kolom yang tidak dipakai harus punya alasan tertulis (saat ini: `HbA1c_level`, karena butuh tes lab khusus; BELUM dikonfirmasi dosen).
-2. **Mengubah tampilan tidak boleh mengubah algoritma.** `app.py`, `train_model_dpd.py`, model, dan dataset jangan disentuh saat mengerjakan HTML/CSS.
+2. **Mengubah tampilan tidak boleh mengubah algoritma.** `app.py`, `auth.py`, `train_model_dpd.py`, model, dan dataset jangan disentuh saat mengerjakan HTML/CSS. Jangan ubah `id` elemen di `index.html` yang dipakai `js/app.js`.
 3. **Jangan ubah atribut `name` di form `index.html` (dan `id` di `js/questions.js`).** Nilainya = nama kolom dataset yang dikirim ke API. Form yang dipakai sekarang ditulis langsung di `index.html`; `js/app.js` membaca `name` itu.
 4. Bila daftar fitur berubah: ubah `FITUR` di skrip pelatihan, latih ulang, lalu uji ulang API dan form. `app.py` membaca `fitur.json`.
 5. Skor model bukan peluang pasti (`class_weight="balanced"`). Di UI pakai istilah "skor risiko model".
-6. Teks "data tidak disimpan" di form harus diganti bila riwayat nanti disimpan ke database.
+6. **Wajib login** (keputusan 2026-11-06): website dibuka langsung tampil layar Masuk/Daftar (`#gate` di `index.html`); `/predict` menolak (401) bila belum login. Tidak ada mode tamu dan tidak ada riwayat di browser. Semua hasil disimpan ke MySQL dengan persetujuan saat daftar (`setuju_simpan`). Teks di halaman Riwayat/Hasil/Daftar harus selalu jujur soal tempat penyimpanan.
+7. Keamanan login: kata sandi hanya disimpan sebagai hash; query MySQL selalu berparameter (`%s`); kredensial hanya di `.env` (tidak di-commit); admin dibuat lewat `python buat_admin.py`, tidak lewat website.
 
 ## Teknologi
 - Frontend: HTML, CSS, JavaScript biasa (tanpa framework). Nama website: "HealthCheck" (sudah diputuskan). Tampilan: dasbor dengan menu samping, warna hijau, font DM Sans dan Manrope (Google Fonts).
-- Backend: Flask + flask-cors, port 8000. Endpoint `GET /health`, `POST /predict`.
+- Backend: Flask + flask-cors, port 8000. Endpoint `GET /health`, `POST /predict`; login/riwayat/admin di `auth.py` (`/auth/*`, `/riwayat`, `/admin/*`, termasuk `/admin/grafik`, `/admin/ekspor.csv`, `DELETE /admin/pengguna/<id>`). Sesi cookie HttpOnly SameSite=Lax; CORS hanya untuk `CORS_ORIGINS` di `.env` (default 127.0.0.1:5500 dan localhost:5500).
+- Database: MySQL/MariaDB 10.4 dari XAMPP (`C:\xampp`), database `healthcheck` (tabel `users`, `riwayat`, lihat `schema.sql`), user MySQL `healthcheck` (bukan root). Karena wajib login, website TIDAK bisa dipakai bila MySQL mati (login dan cek risiko menjawab 503 dengan pesan jelas).
 - Model: scikit-learn Pipeline (OneHotEncoder + StandardScaler + LogisticRegression) disimpan sebagai `model_diabetes.pkl`; daftar fitur di `fitur.json`.
 - Live Server VS Code di port 5500.
 - Lingkungan Tresure: Python 3.13, pandas 3.x, scikit-learn 1.9.x.
 
 ## Struktur proyek
 ```
-index.html                 halaman utama (Beranda, Cek Risiko, Riwayat, Edukasi, Profil); form ditulis langsung di sini
+index.html                 halaman utama (Beranda, Cek Risiko, Riwayat, Edukasi, Profil, Akun, Dasbor Admin); form ditulis langsung di sini
 css/style.css              warna dan font di :root
-js/config.js               API_URL
+js/config.js               API_URL (tidak dipakai; app.js memakai http://<host halaman>:8000)
 js/questions.js            daftar pertanyaan; dimuat tetapi SAAT INI TIDAK DIPAKAI oleh app.js
-js/app.js                  validasi, hitung BMI, panggil API, tampilkan hasil, riwayat di localStorage browser
-app.py                     API Flask
+js/app.js                  layar login pembuka, validasi, BMI, panggil API, hasil, riwayat (database), dasbor admin
+app.py                     API Flask (prediksi) + mendaftarkan auth.py
+auth.py                    endpoint login, riwayat database, admin
+db.py                      koneksi MySQL, membaca .env
+schema.sql                 membuat database healthcheck (aman dijalankan ulang)
+buat_admin.py              membuat akun admin (kata sandi diketik tersembunyi)
+.env.example               contoh pengaturan; .env asli TIDAK di-commit
 train_model_dpd.py         pelatihan model
-test_api.py                uji API tanpa tampilan
+test_api.py                uji API prediksi (butuh MySQL; memakai akun uji sementara yang dihapus otomatis)
+test_auth.py               uji login/riwayat/admin/keamanan (46 pengecekan, butuh MySQL; akun uji @uji.healthcheck.local dihapus otomatis)
 requirements.txt           daftar library dengan versi terkunci
 README.md                  cara memasang dan menjalankan (untuk anggota kelompok)
 .gitignore                 __pycache__, .env, venv tidak di-upload
@@ -60,18 +68,24 @@ Keterbatasan: asal data dan cara pengumpulan tidak dijelaskan rinci; tidak jelas
 python -m pip install -r requirements.txt
 python train_model_dpd.py     # membuat model_diabetes.pkl dan fitur.json
 python app.py                 # API http://127.0.0.1:8000 (biarkan terbuka)
-python test_api.py            # di terminal lain
+python test_api.py            # di terminal lain (butuh MySQL menyala)
+python test_auth.py           # butuh MySQL XAMPP menyala
+python buat_admin.py          # membuat akun admin
+C:\xampp\mysql\bin\mysql.exe -u root -e "source schema.sql"   # membuat tabel (PowerShell tidak mendukung "<")
 ```
 Website: klik kanan `index.html` > Open with Live Server, lalu Ctrl+F5.
 
 ## Jebakan yang pernah terjadi
 - Ctrl+V di PowerShell bisa memicu error PSReadLine: tempel dengan klik kanan.
 - `python` tidak dikenali: pasang Python dari python.org, centang "Add python.exe to PATH", gunakan `python -m pip`.
-- Dua API menyala bersamaan di port 8000 akan bentrok.
+- Dua API menyala bersamaan di port 8000 akan bentrok. Windows bisa membiarkan keduanya menyala, lalu permintaan masuk ke API lama (fitur baru tampak 404). Cek dengan `Get-NetTCPConnection -LocalPort 8000 -State Listen`.
 - Latih ulang model setelah daftar fitur berubah. File `.pkl` bisa gagal dimuat bila versi library berbeda.
 - Jangan buka lalu simpan CSV dari Excel.
 - Folder `css` dan `js` harus huruf kecil dan sejajar dengan `index.html`.
 - Desimal di form ditulis dengan titik (5.7).
+- Tabel sistem `mysql.db` XAMPP pernah rusak ("Index for table 'db' is corrupt"); diperbaiki 2026-11-06 dengan `REPAIR TABLE mysql.db` (backup di `D:\donwload\_backup-mysql\2026-11-06\`).
+- Aturan CSS `display` mengalahkan atribut `hidden`; sudah ada `[hidden]{display:none!important}` di akhir style.css. Uji tampilan harus cek yang benar-benar terlihat, bukan hanya atribut.
+- Batas login gagal (5x / 15 menit) disimpan di memori API; uji ulang tanpa restart API memakai email berbeda.
 
 ## Status dan rencana
 Lihat @docs/KONTEKS.md. Di awal sesi, periksa kondisi nyata folder (file ada atau tidak, model sudah dilatih atau belum) sebelum menyimpulkan apa pun.
