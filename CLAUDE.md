@@ -54,6 +54,11 @@ model_diabetes.pkl, fitur.json    hasil train_model_dpd.py, IKUT di-commit (kepu
 dataset/diabetes_prediction_dataset.csv   dari Kaggle, IKUT di-commit (keputusan 2026-11-06)
 ```
 
+## Game "Tangkap makanan sehat" (Main & Belajar)
+- File: `game.html`, `css/game.css`, `js/game.js` (KONFIG aturan main di paling atas), `js/audio.js` (suara sintesis Web Audio). Menu "Main & Belajar" di `index.html` menuju `game.html`. Acuan desain: `desain_Game/` (SVG makanan disalin ke `<defs>` di `game.html`).
+- Berdiri sendiri: tidak memakai model ML, tidak mengirim data. Wajib login: `game.html` cek `/auth/saya`, belum masuk dialihkan ke `index.html`.
+- localStorage hanya untuk rekor (`hc_game_rekor`) dan pengaturan suara (`hc_game_suara`). Fakta "Tahukah kamu?" tanpa angka; kolom sumber masih kosong (diisi dari Kemenkes/WHO).
+
 ## GitHub
 Repo: https://github.com/adityaprwatama-dotcom/Diabetes-Mechine-Learning (public, cabang `main`).
 Folder ini tersambung ke repo itu. Perubahan baru masuk GitHub hanya setelah commit + push.
