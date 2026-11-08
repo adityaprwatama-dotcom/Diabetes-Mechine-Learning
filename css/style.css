@@ -11,11 +11,46 @@ a.avatar{text-decoration:none}.side-user{display:flex;align-items:center;gap:9px
 .save-note{font-size:10px;color:#6e8980;margin:14px 0 0}.aksi{white-space:nowrap}.aksi .btn{margin-right:5px}.admin-history{margin-top:16px}
 @media(max-width:740px){.auth-layout{grid-template-columns:1fr}.auth-panel{padding:17px}}
 /* Layar login pembuka (wajib login sebelum memakai website) */
-.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px;background:radial-gradient(circle at 15% 10%,#dff4ea 0,transparent 45%),radial-gradient(circle at 90% 90%,#e3f1fb 0,transparent 40%),#f5f9f7}
-.gate-inner{width:100%;max-width:880px}.gate-head{display:flex;gap:10px;align-items:center;color:var(--gd);margin-bottom:22px}.gate-head b,.gate-head small{display:block}.gate-head b{font:800 17px Manrope}.gate-head small{font-size:8px;letter-spacing:1.5px;color:#91aaa1;font-weight:800}
-.gate .info{display:block}.gate .disclaimer{text-align:center;margin-top:18px}
-.gate-status{margin:0 0 14px;background:#fff7e8;border:1px solid #f3dfb5;color:#8a5a12;padding:12px;border-radius:9px;font-size:11px}
-@media(max-width:740px){.gate{align-items:flex-start;padding:22px 16px}.gate .info{display:none}}
+/* Layar login pembuka: dua kolom (form kiri, panel gradasi berbutir kanan). Wajib login sebelum memakai website. */
+.gate{min-height:100vh;background:#f5f9f7;padding:12px}
+.gate-split{display:grid;grid-template-columns:.94fr 1.06fr;gap:12px;min-height:calc(100vh - 24px)}
+.gate-form-side{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:48px 24px}
+.gate-card{width:100%;max-width:470px;margin:auto}
+.gate-head{display:flex;gap:10px;align-items:center;color:var(--gd);margin-bottom:40px}.gate-head b,.gate-head small{display:block}.gate-head b{font:800 17px Manrope}.gate-head small{font-size:9px;letter-spacing:1.5px;color:#5f7970;font-weight:800}
+.gate-title{font:700 42px/1.08 Manrope;letter-spacing:-.04em;color:var(--ink);margin:0}
+.gate-sub{font-size:17px;line-height:1.5;color:#61756d;margin:12px 0 32px}
+.gate-status{margin:0 0 16px;background:#fff7e8;border:1px solid #f3dfb5;color:#8a5a12;padding:12px;border-radius:10px;font-size:13px}
+.gate .tabs{padding:5px;margin-bottom:24px;border-radius:12px}.gate .tab{padding:11px;font-size:14px;border-radius:9px;color:#5f7970}.gate .tab.active{color:var(--g)}
+.gate .fields{gap:16px}.gate .fields label{font-size:13px;gap:8px;color:#3d5b54}
+.gate .fields input{height:50px;border-radius:10px;padding:0 15px;font-size:15px;border-color:#d9e6e1;background:#fff}
+.gate .fields input::placeholder{color:#7e918a}.gate .fields label small{font-size:12px;color:#61756d}
+.field-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.gate .consent{font-size:13px;color:#4f6b63;margin-top:18px}.gate .consent input{width:16px;height:16px;flex:none}
+.gate .actions{margin-top:24px}.gate .actions .btn{width:100%;height:50px;font-size:15px;border-radius:10px}
+.gate .admin-note{font-size:13px}.gate .error,.gate .success{font-size:13px}
+.gate .disclaimer{text-align:center;font-size:12px;color:#61756d;margin:28px 0 0}
+.gate-visual{position:relative;overflow:hidden;border-radius:14px;background:#032620;color:#fff;display:flex;padding:48px}
+.grain{position:absolute;inset:0;overflow:hidden}
+.grain:after{content:"";position:absolute;inset:-50%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.28;mix-blend-mode:overlay}
+.blob{position:absolute;border-radius:50%;filter:blur(50px);will-change:transform}
+.grain:before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,#3fd6a655 60deg,transparent 140deg,#e9fff633 220deg,transparent 300deg);filter:blur(40px);animation:spin 14s linear infinite}
+.b1{width:75%;height:75%;left:-20%;top:-25%;background:radial-gradient(circle,#f2fff9 0,#3fd6a6 38%,transparent 70%);animation:drift1 7s ease-in-out infinite alternate}
+.b2{width:80%;height:80%;right:-25%;bottom:-30%;background:radial-gradient(circle,#ffffff 0,#25b696 33%,#087f69 58%,transparent 75%);animation:drift2 9s ease-in-out infinite alternate}
+.b3{width:50%;height:50%;right:0;top:5%;background:radial-gradient(circle,#baf1d9 0,#0a9b7f 50%,transparent 72%);opacity:.8;animation:drift3 8s ease-in-out infinite alternate}
+@keyframes drift1{0%{transform:translate(0,0) scale(1)}50%{transform:translate(35%,20%) scale(1.25)}100%{transform:translate(10%,55%) scale(.95)}}
+@keyframes drift2{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-30%,-25%) scale(1.2)}100%{transform:translate(-50%,5%) scale(1.05)}}
+@keyframes drift3{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-45%,40%) scale(1.3)}100%{transform:translate(-15%,70%) scale(.9)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gate-visual-inner{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:space-between;width:100%;gap:40px}
+.gate-tag{font-size:12px;letter-spacing:1.4px;font-weight:800;color:#e3fff4;margin:0;text-shadow:0 1px 8px #00302880}
+.gate-visual h2{font:700 66px/1 Manrope;letter-spacing:-.05em;margin:0;max-width:600px;text-shadow:0 2px 24px #00302860}
+.gate-points{max-width:520px;background:#032a2366;border:1px solid #ffffff2e;border-radius:14px;padding:20px 22px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.gate-points .eyebrow{color:#c9f5e3;font-size:12px;margin:0 0 10px}
+.gate-points ul{margin:0;padding-left:18px;font-size:14px;line-height:1.65;color:#f1fffa}.gate-points li+li{margin-top:4px}
+.gate-chip{display:inline-block;margin-top:14px;background:#fff;color:#7a5410;font-size:12px;font-weight:700;padding:7px 12px;border-radius:20px}
+@media(max-width:1050px){.gate-title{font-size:36px}.gate-visual h2{font-size:52px}.gate-visual{padding:36px}}
+@media(max-width:900px){.gate-split{grid-template-columns:1fr}.gate-form-side{padding:36px 20px}.gate-visual{min-height:440px}.gate-visual h2{font-size:44px}}
+@media(max-width:740px){.gate{padding:8px}.gate-split{gap:8px;min-height:auto}.gate-form-side{padding:28px 16px}.gate-head{margin-bottom:28px}.gate-title{font-size:30px}.gate-sub{font-size:15px;margin-bottom:24px}.gate .fields input{font-size:16px}.field-pair{grid-template-columns:1fr}.gate-visual{padding:28px 20px;min-height:400px}.gate-visual h2{font-size:38px}}
 /* Dasbor admin: grafik, cari pengguna, CSV, tab Admin */
 .chart-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;margin:16px 0}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:#6c857d}.legend span{display:flex;align-items:center;gap:5px}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -37,5 +72,60 @@ a.avatar{text-decoration:none}.side-user{display:flex;align-items:center;gap:9px
 .admin-note{margin:0 0 16px;background:#eef6fb;border:1px solid #d3e6f2;color:#335f7a;padding:11px 12px;border-radius:9px;font-size:11px;line-height:1.6}.admin-note code{font-size:10px;background:#fff;padding:1px 4px;border-radius:4px}
 @media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
 @media(max-width:740px){.bar-chart{gap:3px;height:170px}.bar-col small{font-size:8px}.head-actions{justify-content:flex-start}}
+/* ===== Efek visual & animasi (hanya tampilan, tidak mengubah logika) ===== */
+/* 2. Isi halaman muncul bertahap saat pindah menu */
+.page{animation:none}
+.page.active>*{animation:up .5s cubic-bezier(.2,.7,.3,1) backwards}
+.page.active>*:nth-child(2){animation-delay:.07s}.page.active>*:nth-child(3){animation-delay:.14s}.page.active>*:nth-child(4){animation-delay:.21s}.page.active>*:nth-child(5){animation-delay:.28s}.page.active>*:nth-child(n+6){animation-delay:.35s}
+.page.active .stats>*,.page.active .edu-grid>*{animation:up .5s cubic-bezier(.2,.7,.3,1) backwards}
+.page.active .stats>:nth-child(1),.page.active .edu-grid>:nth-child(1){animation-delay:.2s}.page.active .stats>:nth-child(2),.page.active .edu-grid>:nth-child(2){animation-delay:.28s}.page.active .stats>:nth-child(3),.page.active .edu-grid>:nth-child(3){animation-delay:.36s}
+/* 1. Kartu terangkat saat disentuh kursor */
+.stats article,.edu-card,.two-col .panel,.profile-grid .panel,.chart-grid .panel{transition:translate .25s ease,box-shadow .25s ease,border-color .25s ease}
+.stats article:hover,.edu-card:hover,.two-col .panel:hover,.profile-grid .panel:hover,.chart-grid .panel:hover{translate:0 -4px;box-shadow:0 18px 38px #174d3c18;border-color:#d3ebe1}
+.stat-icon,.edu-card>span,.mini-icon,.reminder-icon,.profile-logo{transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.stats article:hover .stat-icon,.edu-card:hover>span,.panel:hover .mini-icon,.reminder:hover .reminder-icon,.profile-card:hover .profile-logo{transform:scale(1.12) rotate(-6deg)}
+.nav-link{transition:background .2s ease,color .2s ease,padding-left .2s ease}.nav-link:hover{padding-left:16px}
+.nav-link.active{box-shadow:inset 3px 0 0 var(--g)}
+tbody tr{transition:background .2s ease}tbody tr:hover{background:#f6fbf9}
+/* 3. Hero Beranda bergerak pelan */
+.hero{background-size:160% 160%;animation:heroBg 14s ease-in-out infinite alternate}
+.page.active>.hero{animation:up .5s cubic-bezier(.2,.7,.3,1) .07s backwards,heroBg 14s ease-in-out infinite alternate}
+@keyframes heroBg{from{background-position:0% 50%}to{background-position:100% 50%}}
+.hero:after{animation:pulse 7s ease-in-out infinite}
+.orbit{animation:pulse 9s ease-in-out infinite reverse}
+@keyframes pulse{0%,100%{scale:1;opacity:1}50%{scale:1.06;opacity:.7}}
+.plus{animation:float 5s ease-in-out infinite}.heart{animation:float 6s ease-in-out 1s infinite}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -12px}}
+.meter{animation:sway 6s ease-in-out infinite}
+@keyframes sway{0%,100%{rotate:0deg;translate:0 0}50%{rotate:-3deg;translate:0 -6px}}
+.family .person{animation:breathe 4s ease-in-out infinite}.family .p1{animation-delay:.6s}.family .p3{animation-delay:1.2s}
+@keyframes breathe{0%,100%{translate:0 0}50%{translate:0 -3px}}
+/* 4. Form dan tombol lebih hidup */
+.fields input,.fields select{transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
+.fields input:hover,.fields select:hover{border-color:#c6e3d7}
+.fields input:focus,.fields select:focus{background:#fff;box-shadow:0 0 0 4px #e4f6ef,0 6px 16px #087f6914}
+.btn{position:relative;overflow:hidden}
+.btn.primary{box-shadow:0 8px 18px #087f6930}.btn.primary:hover{box-shadow:0 12px 24px #087f6940;background:#078a72}
+.btn.primary:after,.btn.white:after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,#ffffff55,transparent);transform:skewX(-20deg);transition:left .6s ease}
+.btn.white:after{background:linear-gradient(100deg,transparent,#087f6922,transparent)}
+.btn.primary:hover:after,.btn.white:hover:after{left:120%}
+.btn:active{transform:translateY(0) scale(.97)}
+.bmi{transition:background .3s ease,border-color .3s ease}.bmi:hover{background:#e9f7f0}
+/* 5. Hasil cek risiko muncul + batang skor terisi dari 0 */
+.result{animation:pop .55s cubic-bezier(.2,.8,.3,1.1)}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.result-badge{animation:badge .6s cubic-bezier(.3,1.6,.5,1) .15s backwards}
+@keyframes badge{from{transform:scale(.3);opacity:0}}
+.scorefill{animation:fill 1.1s cubic-bezier(.2,.7,.3,1) .25s backwards}
+@keyframes fill{from{width:0}}
+.result-section{animation:up .5s ease .45s backwards}
+.error,.success,.gate-status{animation:up .3s ease}
+/* 6. Layar Masuk/Daftar */
+.gate-form-side{animation:up .6s cubic-bezier(.2,.7,.3,1)}
+.gate-visual{animation:up .7s cubic-bezier(.2,.7,.3,1) .1s backwards}
+.tab{transition:background .2s ease,color .2s ease,box-shadow .2s ease}.tab.active{box-shadow:0 3px 10px #174d3c12}
+.gate .brand-icon{animation:float 5s ease-in-out infinite}
+/* 7. Matikan animasi bila pengguna memilih "kurangi gerakan" */
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 /* Elemen ber-atribut hidden harus selalu tersembunyi, walau punya aturan display sendiri */
 [hidden]{display:none!important}
