@@ -35,12 +35,15 @@
     if (!akun) return;   // belum masuk: tetap di layar login
     if (!document.getElementById(id) || !document.getElementById(id).classList.contains("page")) id = "beranda";
     if (id === "admin" && akun.peran !== "admin") id = "beranda";
+    if (akun.wajib_ganti_sandi) id = "akun";   // sandi sementara dari admin: wajib diganti dulu
     $$(".page").forEach(x => x.classList.toggle("active", x.id === id));
     $$("[data-nav]").forEach(x => x.classList.toggle("active", x.dataset.nav === id));
     $("#pageName").textContent = NAMA_HALAMAN[id] || "Beranda";
     history.replaceState(null, "", "#" + id);
     $("#sidebar").classList.remove("open");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (akun.wajib_ganti_sandi) {   // langsung tunjukkan form ganti sandi
+      setTimeout(() => { $("#sandiPanel").scrollIntoView({ behavior: "smooth", block: "center" }); $("#sandiForm [name=password_lama]").focus({ preventScroll: true }); }, 50);
+    } else window.scrollTo({ top: 0, behavior: "smooth" });
     if (id === "riwayat") muatRiwayat();
     if (id === "admin") muatAdmin();
   }
@@ -64,7 +67,7 @@
   }
 
   async function muatRiwayat() {
-    if (!akun) return tampilkanRiwayat([]);
+    if (!akun || akun.wajib_ganti_sandi) return tampilkanRiwayat([]);
     try {
       const d = await panggil("/riwayat");
       tampilkanRiwayat(d.riwayat.map(r => ({ date: r.waktu, age: r.input.age, label: r.label, probability: r.skor })));
@@ -161,6 +164,9 @@
       $("#sideNama").textContent = $("#akunNama").textContent = akun.nama;
       $("#akunEmail").textContent = akun.email;
       $("#sidePeran").textContent = $("#akunPeran").textContent = admin ? "Admin" : "Pengguna";
+      $("#sandiWajib").hidden = !akun.wajib_ganti_sandi;
+      $("#sandiPanel").classList.toggle("wajib", !!akun.wajib_ganti_sandi);
+      $("#sandiLamaHint").textContent = akun.wajib_ganti_sandi ? "Isi dengan kata sandi sementara dari admin." : "Kata sandi yang Anda pakai untuk masuk.";
     }
     muatRiwayat();
   }
@@ -173,6 +179,8 @@
     $("#userBody").innerHTML = '<tr><td colspan="7" class="empty">Memuat...</td></tr>';
     semuaPengguna = []; $("#cariPengguna").value = ""; $("#cariInfo").textContent = "";
     $("#chartHarian").innerHTML = ""; $("#chartRasio").innerHTML = "";
+    $("#sandiForm").reset(); sandiPesan("", ""); tutupSandiSementara();
+    $("#lupaNote").hidden = true; $("#lupaBtn").setAttribute("aria-expanded", "false");
     history.replaceState(null, "", location.pathname + location.search);
   }
 
@@ -197,8 +205,16 @@
     $("#registerForm").hidden = modeLogin !== "daftar";
     $("#adminLoginNote").hidden = modeLogin !== "admin";
     $("#loginBtn").textContent = modeLogin === "admin" ? "Masuk sebagai admin →" : "Masuk →";
+    $("#lupaBtn").hidden = modeLogin === "admin";
+    if (modeLogin === "admin") { $("#lupaNote").hidden = true; $("#lupaBtn").setAttribute("aria-expanded", "false"); }
     authError("");
   }));
+
+  $("#lupaBtn").addEventListener("click", () => {
+    const buka = $("#lupaNote").hidden;
+    $("#lupaNote").hidden = !buka;
+    $("#lupaBtn").setAttribute("aria-expanded", String(buka));
+  });
 
   async function kirimAuth(form, path, body) {
     const btn = form.querySelector("button[type=submit]"), teks = btn.textContent;
@@ -226,6 +242,31 @@
     const f = new FormData(e.currentTarget);
     if (f.get("password") !== f.get("password2")) return authError("Kata sandi dan ulangi kata sandi tidak sama.");
     kirimAuth(e.currentTarget, "/auth/daftar", { nama: f.get("nama"), email: f.get("email"), password: f.get("password"), setuju: f.get("setuju") === "on" });
+  });
+
+  /* ---------- ganti kata sandi (halaman Akun) ---------- */
+  function sandiPesan(galat, info) {
+    $("#sandiError").textContent = galat; $("#sandiError").hidden = !galat;
+    $("#sandiInfo").textContent = info; $("#sandiInfo").hidden = !info;
+  }
+  $("#sandiForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const form = e.currentTarget, f = new FormData(form), btn = $("#sandiBtn");
+    sandiPesan("", "");
+    if (f.get("password_baru") !== f.get("password_baru2")) return sandiPesan("Kata sandi baru dan ulangi kata sandi baru tidak sama.", "");
+    if (f.get("password_baru") === f.get("password_lama")) return sandiPesan("Kata sandi baru harus berbeda dari kata sandi lama.", "");
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+    try {
+      const wajibTadi = akun?.wajib_ganti_sandi;
+      const d = await panggil("/auth/ganti-sandi", { method: "POST", body: { password_lama: f.get("password_lama"), password_baru: f.get("password_baru") } });
+      akun = d.pengguna; form.reset(); tampilkanAkun();
+      sandiPesan("", wajibTadi ? "Kata sandi baru tersimpan. Sekarang semua fitur HealthCheck bisa dipakai." : "Kata sandi berhasil diganti. Pakai kata sandi baru saat masuk berikutnya.");
+    } catch (ex) {
+      sandiPesan(pesanKoneksi(ex), "");
+      if (ex.status === 401) cekSesi();
+    } finally {
+      btn.disabled = false; btn.textContent = "Simpan kata sandi baru";
+    }
   });
 
   async function keluar() {
@@ -267,11 +308,11 @@
     $("#cariInfo").textContent = kata ? `${daftar.length} dari ${semuaPengguna.length} pengguna` : "";
     $("#userBody").innerHTML = daftar.length ? daftar.map(x => `<tr>
         <td>${esc(x.nama)}</td><td>${esc(x.email)}</td><td>${x.peran === "admin" ? "Admin" : "Pengguna"}</td>
-        <td><span class="pill ${x.aktif ? "low" : "high"}">${x.aktif ? "Aktif" : "Nonaktif"}</span></td>
+        <td><span class="pill ${x.aktif ? "low" : "high"}">${x.aktif ? "Aktif" : "Nonaktif"}</span>${x.wajib_ganti_sandi ? ' <span class="pill wait" title="Masih memakai sandi sementara dari admin">Sandi sementara</span>' : ""}</td>
         <td>${x.jumlah_pemeriksaan}</td><td>${esc(x.terakhir || "-")}</td>
         <td class="aksi"><button class="btn outline small" data-lihat="${x.id}">Riwayat</button>${x.id === akun.id ? "" :
           `<button class="btn outline small ${x.aktif ? "danger" : ""}" data-status="${x.id}" data-aktif="${x.aktif ? 0 : 1}">${x.aktif ? "Nonaktifkan" : "Aktifkan"}</button>`}${x.peran === "user" ?
-          `<button class="btn outline small danger" data-hapus-akun="${x.id}">Hapus</button>` : ""}</td></tr>`).join("")
+          `<button class="btn outline small" data-reset="${x.id}">Reset sandi</button><button class="btn outline small danger" data-hapus-akun="${x.id}">Hapus</button>` : ""}</td></tr>`).join("")
       : `<tr><td colspan="7" class="empty">${kata ? "Tidak ada pengguna yang cocok." : "Belum ada pengguna."}</td></tr>`;
   }
   $("#cariPengguna").addEventListener("input", gambarPengguna);
@@ -312,6 +353,19 @@
     const b = e.target.closest("button");
     if (!b) return;
     if (b.dataset.lihat) return lihatRiwayat(+b.dataset.lihat);
+    if (b.dataset.reset) {
+      const x = semuaPengguna.find(p => p.id === +b.dataset.reset);
+      if (!x || !confirm(`Reset kata sandi "${x.nama}" (${x.email})?
+
+Kata sandi lama tidak berlaku lagi. Pastikan yang meminta benar-benar pemilik akun ini.`)) return;
+      try {
+        const d = await panggil(`/admin/pengguna/${x.id}/reset-sandi`, { method: "POST" });
+        $("#ssEmail").textContent = d.email; $("#ssKode").textContent = d.sandi_sementara; $("#ssSalin").textContent = "Salin";
+        $("#sandiSementara").hidden = false;
+        $("#sandiSementara").scrollIntoView({ behavior: "smooth", block: "center" });
+      } catch (ex) { return adminError(pesanKoneksi(ex)); }
+      return muatAdmin();
+    }
     if (b.dataset.hapusAkun) {
       const x = semuaPengguna.find(p => p.id === +b.dataset.hapusAkun);
       if (!x) return;
@@ -340,6 +394,14 @@
     muatAdmin();
   });
   $("#adminRefresh").addEventListener("click", muatAdmin);
+
+  // Kotak sandi sementara: hanya di layar admin, hilang saat ditutup atau keluar.
+  function tutupSandiSementara() { $("#sandiSementara").hidden = true; $("#ssKode").textContent = "-"; $("#ssEmail").textContent = "-"; }
+  $("#ssTutup").addEventListener("click", tutupSandiSementara);
+  $("#ssSalin").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("#ssKode").textContent); $("#ssSalin").textContent = "Tersalin ✓"; }
+    catch { $("#ssSalin").textContent = "Salin manual"; }
+  });
 
   // 3. Unduh semua riwayat sebagai CSV (file dibuat server, hanya untuk admin).
   $("#unduhCsv").addEventListener("click", async () => {

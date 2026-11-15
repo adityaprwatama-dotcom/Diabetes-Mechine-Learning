@@ -127,5 +127,20 @@ tbody tr{transition:background .2s ease}tbody tr:hover{background:#f6fbf9}
 .gate .brand-icon{animation:float 5s ease-in-out infinite}
 /* 7. Matikan animasi bila pengguna memilih "kurangi gerakan" */
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+/* 8. Lupa & ganti kata sandi (2026-11-15) */
+.gate .actions{flex-wrap:wrap}
+.link-btn{background:none;border:0;padding:6px 2px;color:var(--g);font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.link-btn:hover{color:var(--gd)}.link-btn:focus-visible{outline:2px solid var(--g);outline-offset:3px;border-radius:4px}
+.gate .actions .link-btn{width:100%;text-align:center}
+.lupa-note{margin:14px 0 0}
+.sandi-panel .auth-form{margin-top:12px}
+.sandi-panel.wajib{border:2px solid #e7b46a;box-shadow:0 0 0 4px #fff4e2}
+.sandi-wajib{margin:10px 0 4px;background:#fff6e8;border:1px solid #f1d6a8;color:#8a5a12;padding:11px 12px;border-radius:9px;font-size:12px;line-height:1.6}
+.pill{white-space:nowrap}
+.pill.wait{display:inline-block;margin-top:4px;background:#fff6e8;color:#a56a12}
+.sandi-box{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 14px;background:var(--mint);border:1px dashed var(--g);padding:14px;border-radius:10px}
+.sandi-box small{font-size:10px;letter-spacing:.06em;color:var(--muted)}
+.sandi-box code{display:block;margin:6px 0;font-size:22px;font-weight:800;letter-spacing:.12em;color:var(--gd);font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+.sandi-box p{margin:0;font-size:11px;color:var(--ink);max-width:520px}
 /* Elemen ber-atribut hidden harus selalu tersembunyi, walau punya aturan display sendiri */
 [hidden]{display:none!important}

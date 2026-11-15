@@ -16,7 +16,8 @@
 <form id="loginForm" class="auth-form"><p class="admin-note" id="adminLoginNote" hidden>Khusus admin. Akun admin dibuat oleh pengelola (perintah <code>python buat_admin.py</code>) dan tidak bisa didaftarkan dari website. Pengguna biasa silakan memakai tab Masuk.</p><div class="fields one">
 <label>Email<input name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></label>
 <label>Kata sandi<input name="password" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label></div>
-<div class="actions"><button class="btn primary" type="submit" id="loginBtn">Masuk →</button></div></form>
+<div class="actions"><button class="btn primary" type="submit" id="loginBtn">Masuk →</button><button class="link-btn" type="button" id="lupaBtn" aria-expanded="false" aria-controls="lupaNote">Lupa kata sandi?</button></div>
+<div class="admin-note lupa-note" id="lupaNote" hidden><b>Lupa kata sandi?</b> HealthCheck berjalan tanpa layanan email, jadi kata sandi direset oleh admin. Hubungi admin HealthCheck (pengelola kelompok) dan sebutkan email akun Anda. Admin akan memberi <b>kata sandi sementara</b>; setelah masuk dengan sandi itu, Anda langsung diminta membuat kata sandi baru.</div></form>
 <form id="registerForm" class="auth-form" hidden><div class="fields one">
 <label>Nama lengkap<input name="nama" type="text" autocomplete="name" minlength="2" maxlength="100" required></label>
 <label>Email<input name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></label>
@@ -98,7 +99,15 @@
 
 <section class="page" id="akun"><div class="intro"><p class="eyebrow">AKUN PENGGUNA</p><h1 id="akunJudul">Akun saya</h1><p>Informasi akun yang sedang Anda pakai.</p></div>
 <div class="profile-grid" id="accountBox" hidden><article class="panel profile-card"><span class="profile-logo" id="akunAvatar">A</span><h2 id="akunNama">-</h2><p id="akunEmail">-</p><div class="meta"><span>Peran</span><b id="akunPeran">-</b><span>Riwayat</span><b>Tersimpan di database</b></div><div class="actions center"><a class="btn outline" href="#riwayat">Lihat riwayat</a><button class="btn primary" type="button" id="logoutBtn2">Keluar</button></div></article>
-<article class="panel"><p class="eyebrow">PRIVASI</p><h3>Data Anda</h3><p>Setiap hasil cek risiko disimpan di database bersama tanggal dan data isian. Anda dapat menghapus seluruh riwayat dari halaman Riwayat.</p></article></div></section>
+<article class="panel"><p class="eyebrow">PRIVASI</p><h3>Data Anda</h3><p>Setiap hasil cek risiko disimpan di database bersama tanggal dan data isian. Anda dapat menghapus seluruh riwayat dari halaman Riwayat.</p></article>
+<article class="panel sandi-panel" id="sandiPanel"><p class="eyebrow">KEAMANAN</p><h3>Ganti kata sandi</h3>
+<div class="sandi-wajib" id="sandiWajib" role="alert" hidden><b>Anda masuk dengan kata sandi sementara dari admin.</b> Buat kata sandi baru dulu sebelum memakai fitur lain.</div>
+<form id="sandiForm" class="auth-form"><div class="fields one">
+<label>Kata sandi lama<input name="password_lama" type="password" autocomplete="current-password" required><small id="sandiLamaHint">Kata sandi yang Anda pakai untuk masuk tadi.</small></label>
+<label>Kata sandi baru<input name="password_baru" type="password" autocomplete="new-password" minlength="8" maxlength="128" required><small>Minimal 8 karakter, berbeda dari sandi lama.</small></label>
+<label>Ulangi kata sandi baru<input name="password_baru2" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label></div>
+<div class="actions"><button class="btn primary" type="submit" id="sandiBtn">Simpan kata sandi baru</button></div></form>
+<div class="error" id="sandiError" role="alert" hidden></div><div class="success" id="sandiInfo" role="status" hidden></div></article></div></section>
 
 <section class="page" id="admin"><div class="intro"><p class="eyebrow">KHUSUS ADMIN</p><h1>Dasbor Admin</h1><p>Statistik pemeriksaan dan pengelolaan pengguna.</p></div>
 <div class="stats" id="adminStats">
@@ -107,6 +116,7 @@
 <article><span class="stat-icon yellow">!</span><div><small>Risiko tinggi</small><b id="stTinggi">0%</b><small id="stTinggiN">0 pemeriksaan</small></div></article></div>
 <div class="chart-grid"><article class="panel"><div class="panel-head"><div><h3>Pemeriksaan 14 hari terakhir</h3><p>Jumlah pemeriksaan per hari, dibagi menurut hasil.</p></div><div class="legend"><span><i class="low"></i>Risiko rendah</span><span><i class="high"></i>Risiko tinggi</span></div></div><div class="bar-chart" id="chartHarian"></div></article><article class="panel"><div class="panel-head"><div><h3>Perbandingan hasil</h3><p>Seluruh pemeriksaan yang tersimpan.</p></div></div><div class="ratio" id="chartRasio"></div></article></div>
 <article class="panel"><div class="panel-head"><div><h3>Daftar pengguna</h3><p>Klik "Riwayat" untuk melihat hasil pemeriksaan seorang pengguna.</p></div><div class="head-actions"><button class="btn outline small" id="unduhCsv" type="button">Unduh CSV</button><button class="btn outline small" id="adminRefresh" type="button">Muat ulang</button></div></div><div class="admin-tools"><input type="search" id="cariPengguna" placeholder="Cari nama atau email..." autocomplete="off" aria-label="Cari pengguna"><small id="cariInfo"></small></div><p class="csv-note">File CSV berisi data kesehatan seluruh pengguna. Simpan baik-baik dan jangan disebarkan.</p>
+<div class="sandi-box" id="sandiSementara" role="status" hidden><div><small>KATA SANDI SEMENTARA UNTUK <b id="ssEmail">-</b></small><code id="ssKode">-</code><p>Berikan langsung kepada pengguna (jangan lewat grup). Sandi ini hanya ditampilkan sekali; pengguna wajib menggantinya saat masuk.</p></div><div class="head-actions"><button class="btn outline small" id="ssSalin" type="button">Salin</button><button class="btn outline small" id="ssTutup" type="button">Tutup</button></div></div>
 <div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Peran</th><th>Status</th><th>Pemeriksaan</th><th>Terakhir</th><th>Aksi</th></tr></thead><tbody id="userBody"><tr><td colspan="7" class="empty">Memuat...</td></tr></tbody></table></div></article>
 <article class="panel admin-history" id="adminHistory" hidden><div class="panel-head"><div><h3 id="ahJudul">Riwayat pengguna</h3><p id="ahEmail"></p></div><button class="btn outline small danger" id="ahHapusSemua" type="button">Hapus semua riwayat</button></div>
 <div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Usia</th><th>Gula darah</th><th>BMI</th><th>Hasil</th><th>Skor</th><th>Aksi</th></tr></thead><tbody id="ahBody"></tbody></table></div></article>
