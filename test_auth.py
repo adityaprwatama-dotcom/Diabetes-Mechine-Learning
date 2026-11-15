@@ -178,6 +178,50 @@ cek("45. Tab Admin menolak akun biasa (dan tidak membuat sesi)", s == 403 and d2
 s, d, _ = Klien()("POST", "/auth/masuk", {"email": ADMIN_EMAIL, "password": ADMIN_SANDI, "sebagai": "admin"})
 cek("46. Tab Admin menerima akun admin", s == 200 and d["pengguna"]["peran"] == "admin")
 
+# ---------------- ganti kata sandi & lupa kata sandi (reset oleh admin), 2026-11-15
+SANDI = {"nama": "Uji Sandi", "email": "sandi" + DOMAIN, "password": "sandiAwal123", "setuju": True}
+s, d, _ = Klien()("POST", "/auth/ganti-sandi", {"password_lama": "x", "password_baru": "sandiBaru123"})
+cek("47. Ganti sandi tanpa masuk ditolak", s == 401, d.get("error"))
+us = Klien(); us("POST", "/auth/daftar", SANDI)
+s, d, _ = us("POST", "/auth/ganti-sandi", {"password_lama": "salah12345", "password_baru": "sandiBaru123"})
+cek("48. Ganti sandi dengan sandi lama salah ditolak", s == 400, d.get("error"))
+s, d, _ = us("POST", "/auth/ganti-sandi", {"password_lama": SANDI["password"], "password_baru": "pendek"})
+cek("49. Sandi baru < 8 karakter ditolak", s == 400, d.get("error"))
+s, d, _ = us("POST", "/auth/ganti-sandi", {"password_lama": SANDI["password"], "password_baru": SANDI["password"]})
+cek("50. Sandi baru yang sama dengan sandi lama ditolak", s == 400, d.get("error"))
+hash_lama = db.ambil("SELECT password_hash FROM users WHERE email=%s", (SANDI["email"],), satu=True)["password_hash"]
+s, d, _ = us("POST", "/auth/ganti-sandi", {"password_lama": SANDI["password"], "password_baru": "sandiBaru123"})
+hash_baru = db.ambil("SELECT password_hash FROM users WHERE email=%s", (SANDI["email"],), satu=True)["password_hash"]
+s2, _, _ = Klien()("POST", "/auth/masuk", {"email": SANDI["email"], "password": SANDI["password"]})
+s3, _, _ = Klien()("POST", "/auth/masuk", {"email": SANDI["email"], "password": "sandiBaru123"})
+cek("51. Ganti sandi berhasil (sandi lama tidak berlaku, sandi baru bisa masuk, tersimpan sebagai hash baru)",
+    s == 200 and s2 == 401 and s3 == 200 and hash_baru != hash_lama and hash_baru.startswith(("scrypt:", "pbkdf2:")), (s, s2, s3))
+sid = db.ambil("SELECT id FROM users WHERE email=%s", (SANDI["email"],), satu=True)["id"]
+s, d, _ = us("POST", f"/admin/pengguna/{sid}/reset-sandi"); cek("52. User biasa tidak bisa mereset sandi", s == 403, d.get("error"))
+s, d, h = a("POST", f"/admin/pengguna/{sid}/reset-sandi")
+sementara = d.get("sandi_sementara", "")
+flag = db.ambil("SELECT wajib_ganti_sandi FROM users WHERE id=%s", (sid,), satu=True)["wajib_ganti_sandi"]
+cek("53. Admin mereset sandi (sandi sementara 10 karakter, ditandai wajib ganti, tidak disimpan di cache)",
+    s == 200 and len(sementara) == 10 and flag == 1 and "no-store" in h.get("Cache-Control", ""), d.get("pesan"))
+s, _, _ = Klien()("POST", "/auth/masuk", {"email": SANDI["email"], "password": "sandiBaru123"})
+cek("54. Setelah reset, sandi sebelumnya tidak berlaku", s == 401)
+ut = Klien()
+s, d, _ = ut("POST", "/auth/masuk", {"email": SANDI["email"], "password": sementara})
+cek("55. Masuk dengan sandi sementara berhasil dan diberi tanda wajib ganti", s == 200 and d["pengguna"]["wajib_ganti_sandi"] is True)
+sp, _, _ = ut("POST", "/predict", SEHAT); sr, dr, _ = ut("GET", "/riwayat"); _, ds, _ = ut("GET", "/auth/saya")
+cek("56. Selama sandi sementara: cek risiko 401, riwayat 403, status tetap masuk", sp == 401 and sr == 403 and ds["masuk"] is True, (sp, sr, dr.get("error")))
+s, d, _ = ut("POST", "/auth/ganti-sandi", {"password_lama": sementara, "password_baru": "sandiAkhir123"})
+sp, dp, _ = ut("POST", "/predict", SEHAT)
+flag = db.ambil("SELECT wajib_ganti_sandi FROM users WHERE id=%s", (sid,), satu=True)["wajib_ganti_sandi"]
+cek("57. Setelah sandi sementara diganti, tanda hilang dan cek risiko bisa dipakai lagi",
+    s == 200 and d["pengguna"]["wajib_ganti_sandi"] is False and flag == 0 and sp == 200 and dp.get("tersimpan") is True, (s, sp))
+s, d, _ = a("POST", f"/admin/pengguna/{aid}/reset-sandi"); cek("58. Admin tidak bisa mereset sandinya sendiri dari tabel", s == 400, d.get("error"))
+s, d, _ = a("POST", f"/admin/pengguna/{aid2}/reset-sandi"); cek("59. Sandi admin lain tidak bisa direset dari website", s == 403, d.get("error"))
+s, d, _ = a("POST", "/admin/pengguna/999999999/reset-sandi"); cek("60. Reset sandi pengguna yang tidak ada = 404", s == 404)
+s, d, _ = a("GET", "/admin/pengguna")
+cek("61. Daftar pengguna admin memuat tanda sandi sementara (tanpa password_hash)",
+    s == 200 and all("wajib_ganti_sandi" in x for x in d["pengguna"]) and "password_hash" not in json.dumps(d))
+
 bersihkan()
 sisa =db.ambil("SELECT COUNT(*) AS n FROM users WHERE email LIKE %s", ("%" + DOMAIN,), satu=True)["n"]
 print(f"\nAkun uji dibersihkan (sisa: {sisa}).")

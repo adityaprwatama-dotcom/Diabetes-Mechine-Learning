@@ -1,6 +1,6 @@
 -- Database HealthCheck: akun pengguna dan riwayat cek risiko.
 -- Jalankan sekali (XAMPP: MySQL harus Start):
---   C:\xampp\mysql\bin\mysql.exe -u root < schema.sql
+--   C:\xampp\mysql\bin\mysql.exe -u root -e "source schema.sql"   (PowerShell tidak mendukung "<")
 -- Aman dijalankan ulang: tabel yang sudah ada tidak dihapus.
 
 CREATE DATABASE IF NOT EXISTS healthcheck CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -14,8 +14,12 @@ CREATE TABLE IF NOT EXISTS users (
   peran          ENUM('user', 'admin') NOT NULL DEFAULT 'user',
   aktif          TINYINT(1) NOT NULL DEFAULT 1,       -- 0 = dinonaktifkan admin, tidak bisa login
   setuju_simpan  DATETIME NULL,                       -- waktu pengguna menyetujui penyimpanan data
+  wajib_ganti_sandi TINYINT(1) NOT NULL DEFAULT 0,    -- 1 = sandi sementara dari admin, wajib diganti saat masuk
   dibuat         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+-- Untuk database lama yang dibuat sebelum fitur lupa/ganti sandi (2026-11-15).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS wajib_ganti_sandi TINYINT(1) NOT NULL DEFAULT 0 AFTER setuju_simpan;
 
 CREATE TABLE IF NOT EXISTS riwayat (
   id       INT AUTO_INCREMENT PRIMARY KEY,

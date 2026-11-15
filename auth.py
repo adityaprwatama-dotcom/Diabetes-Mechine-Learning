@@ -6,23 +6,30 @@ Ringkasan endpoint:
   POST   /auth/masuk                       login ({"sebagai": "admin"} = tab Admin, hanya akun admin)
   POST   /auth/keluar                      logout
   GET    /auth/saya                        akun yang sedang login
+  POST   /auth/ganti-sandi                 ganti kata sandi sendiri (wajib kirim sandi lama)
   GET    /riwayat                          riwayat milik sendiri
   DELETE /riwayat                          hapus semua riwayat milik sendiri
   GET    /admin/statistik                  (admin) jumlah pengguna, pemeriksaan, % risiko tinggi
   GET    /admin/pengguna                   (admin) daftar pengguna
   PATCH  /admin/pengguna/<id>              (admin) aktifkan / nonaktifkan akun
   DELETE /admin/pengguna/<id>              (admin) hapus akun user permanen (wajib kirim email sebagai konfirmasi)
+  POST   /admin/pengguna/<id>/reset-sandi  (admin) buat sandi sementara untuk user yang lupa sandi
   GET    /admin/grafik                     (admin) jumlah pemeriksaan per hari (14 hari) + total tinggi/rendah
   GET    /admin/ekspor.csv                 (admin) unduh semua riwayat sebagai CSV
   GET    /admin/pengguna/<id>/riwayat      (admin) riwayat seorang pengguna
   DELETE /admin/pengguna/<id>/riwayat      (admin) hapus semua riwayat seorang pengguna
   DELETE /admin/riwayat/<id>               (admin) hapus satu riwayat
+
+Lupa kata sandi (keputusan 2026-11-15): website lokal tidak mengirim email, jadi pengguna menghubungi admin.
+Admin membuat sandi sementara; selama wajib_ganti_sandi = 1, akun hanya bisa memakai /auth/saya,
+/auth/ganti-sandi, dan /auth/keluar (cek risiko, riwayat, dan admin ditolak) sampai sandinya diganti.
 """
 import csv
 import datetime
 import io
 import json
 import re
+import secrets
 import time
 from functools import wraps
 from flask import Blueprint, Response, jsonify, request, session
@@ -54,30 +61,40 @@ def data_json():
 
 def publik(u):
     """Data akun yang aman dikirim ke browser (tanpa password_hash)."""
-    return {"id": u["id"], "nama": u["nama"], "email": u["email"], "peran": u["peran"]}
+    return {"id": u["id"], "nama": u["nama"], "email": u["email"], "peran": u["peran"],
+            "wajib_ganti_sandi": bool(u.get("wajib_ganti_sandi"))}
 
 
-def pengguna_sekarang():
-    """Akun yang sedang login, atau None. Dicek ulang ke database agar akun yang dinonaktifkan langsung keluar."""
+def pengguna_sekarang(izinkan_sandi_sementara=False):
+    """Akun yang sedang login, atau None. Dicek ulang ke database agar akun yang dinonaktifkan langsung keluar.
+    Akun yang masih memakai sandi sementara dari admin dianggap belum masuk (None), kecuali izinkan_sandi_sementara=True
+    (dipakai /auth/saya dan /auth/ganti-sandi). Karena itu /predict di app.py juga menolaknya."""
     uid = session.get("user_id")
     if not uid:
         return None
     try:
-        u = db.ambil("SELECT id, nama, email, peran, aktif FROM users WHERE id=%s", (uid,), satu=True)
+        u = db.ambil("SELECT id, nama, email, peran, aktif, wajib_ganti_sandi FROM users WHERE id=%s", (uid,), satu=True)
     except db.DatabaseMati:
         return None
     if not u or not u["aktif"]:
         session.clear()
         return None
+    if u["wajib_ganti_sandi"] and not izinkan_sandi_sementara:
+        return None
     return u
+
+
+PESAN_GANTI_DULU = "Ganti kata sandi sementara Anda terlebih dahulu di halaman Akun."
 
 
 def wajib_login(fn):
     @wraps(fn)
     def bungkus(*a, **kw):
-        u = pengguna_sekarang()
+        u = pengguna_sekarang(izinkan_sandi_sementara=True)
         if not u:
             return galat("Silakan masuk terlebih dahulu.", 401)
+        if u["wajib_ganti_sandi"]:
+            return galat(PESAN_GANTI_DULU, 403)
         return fn(u, *a, **kw)
     return bungkus
 
@@ -85,9 +102,11 @@ def wajib_login(fn):
 def wajib_admin(fn):
     @wraps(fn)
     def bungkus(*a, **kw):
-        u = pengguna_sekarang()
+        u = pengguna_sekarang(izinkan_sandi_sementara=True)
         if not u:
             return galat("Silakan masuk terlebih dahulu.", 401)
+        if u["wajib_ganti_sandi"]:
+            return galat(PESAN_GANTI_DULU, 403)
         if u["peran"] != "admin":
             return galat("Halaman ini hanya untuk admin.", 403)
         return fn(u, *a, **kw)
@@ -133,7 +152,8 @@ def daftar():
                      "VALUES (%s, %s, %s, 'user', NOW())", (nama, email, generate_password_hash(sandi)))
     session.clear()
     session["user_id"] = uid
-    return jsonify({"pesan": "Akun berhasil dibuat.", "pengguna": {"id": uid, "nama": nama, "email": email, "peran": "user"}}), 201
+    return jsonify({"pesan": "Akun berhasil dibuat.", "pengguna": {"id": uid, "nama": nama, "email": email, "peran": "user",
+                                                           "wajib_ganti_sandi": False}}), 201
 
 
 @bp.post("/auth/masuk")
@@ -167,8 +187,33 @@ def keluar():
 
 @bp.get("/auth/saya")
 def saya():
-    u = pengguna_sekarang()
+    u = pengguna_sekarang(izinkan_sandi_sementara=True)
     return jsonify({"masuk": bool(u), "pengguna": publik(u) if u else None})
+
+
+@bp.post("/auth/ganti-sandi")
+def ganti_sandi():
+    """Ganti kata sandi sendiri. Wajib login dan wajib tahu sandi lama (juga dipakai untuk mengganti sandi sementara)."""
+    u = pengguna_sekarang(izinkan_sandi_sementara=True)
+    if not u:
+        return galat("Silakan masuk terlebih dahulu.", 401)
+    d = data_json()
+    lama, baru = str(d.get("password_lama", "")), str(d.get("password_baru", ""))
+    kunci = f"ganti|{u['id']}"
+    gagal = [t for t in _gagal.get(kunci, []) if time.time() - t < JEDA_DETIK]
+    if len(gagal) >= MAKS_GAGAL:
+        return galat("Terlalu banyak percobaan gagal. Coba lagi 15 menit lagi.", 429)
+    baris = db.ambil("SELECT password_hash FROM users WHERE id=%s", (u["id"],), satu=True)
+    if not baris or not check_password_hash(baris["password_hash"], lama):
+        _gagal[kunci] = gagal + [time.time()]
+        return galat("Kata sandi lama salah.")
+    if not 8 <= len(baru) <= 128:
+        return galat("Kata sandi baru minimal 8 karakter.")
+    if baru == lama:
+        return galat("Kata sandi baru harus berbeda dari kata sandi lama.")
+    db.ubah("UPDATE users SET password_hash=%s, wajib_ganti_sandi=0 WHERE id=%s", (generate_password_hash(baru), u["id"]))
+    _gagal.pop(kunci, None)
+    return jsonify({"pesan": "Kata sandi berhasil diganti.", "pengguna": publik({**u, "wajib_ganti_sandi": 0})})
 
 
 # ------------------------------------------------------------------ riwayat milik sendiri
@@ -205,10 +250,11 @@ def statistik(_):
 @wajib_admin
 def daftar_pengguna(_):
     rows = db.ambil(
-        "SELECT u.id, u.nama, u.email, u.peran, u.aktif, u.dibuat, COUNT(r.id) AS jumlah, MAX(r.waktu) AS terakhir "
+        "SELECT u.id, u.nama, u.email, u.peran, u.aktif, u.wajib_ganti_sandi, u.dibuat, COUNT(r.id) AS jumlah, MAX(r.waktu) AS terakhir "
         "FROM users u LEFT JOIN riwayat r ON r.user_id = u.id GROUP BY u.id ORDER BY u.dibuat DESC")
     return jsonify({"pengguna": [{
         "id": x["id"], "nama": x["nama"], "email": x["email"], "peran": x["peran"], "aktif": bool(x["aktif"]),
+        "wajib_ganti_sandi": bool(x["wajib_ganti_sandi"]),
         "dibuat": x["dibuat"].strftime("%Y-%m-%d"), "jumlah_pemeriksaan": int(x["jumlah"]),
         "terakhir": x["terakhir"].strftime("%Y-%m-%d %H:%M") if x["terakhir"] else None} for x in rows]})
 
@@ -268,6 +314,31 @@ def hapus_akun(admin, uid):
         return galat("Email konfirmasi tidak sama. Akun tidak dihapus.")
     db.ubah("DELETE FROM users WHERE id=%s", (uid,))
     return jsonify({"pesan": "Akun dan seluruh riwayatnya dihapus.", "dihapus": uid})
+
+
+# Huruf/angka yang mudah dibedakan saat dibacakan atau diketik ulang (tanpa 0/O, 1/l/I)
+HURUF_SANDI = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"
+
+
+@bp.post("/admin/pengguna/<int:uid>/reset-sandi")
+@wajib_admin
+def reset_sandi(admin, uid):
+    """Lupa kata sandi: buat sandi sementara acak. Hanya ditampilkan sekali ke admin; pengguna wajib menggantinya."""
+    if uid == admin["id"]:
+        return galat("Untuk sandi Anda sendiri, gunakan form Ganti kata sandi di halaman Akun.")
+    u = db.ambil("SELECT id, email, peran FROM users WHERE id=%s", (uid,), satu=True)
+    if not u:
+        return galat("Pengguna tidak ditemukan.", 404)
+    if u["peran"] == "admin":
+        return galat("Sandi akun admin tidak dapat direset dari website.", 403)
+    sementara = "".join(secrets.choice(HURUF_SANDI) for _ in range(10))
+    db.ubah("UPDATE users SET password_hash=%s, wajib_ganti_sandi=1 WHERE id=%s", (generate_password_hash(sementara), uid))
+    for k in [k for k in _gagal if k.endswith("|" + u["email"])]:   # buka blokir login gagal untuk email ini
+        _gagal.pop(k, None)
+    r = jsonify({"pesan": "Sandi sementara dibuat. Berikan kepada pengguna secara langsung; sandi ini hanya ditampilkan sekali.",
+                 "sandi_sementara": sementara, "email": u["email"]})
+    r.headers["Cache-Control"] = "no-store"
+    return r
 
 
 HARI_GRAFIK = 14
