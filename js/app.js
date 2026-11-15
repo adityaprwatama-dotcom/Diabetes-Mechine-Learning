@@ -56,6 +56,36 @@
   $("#todayLabel").textContent = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
   $("#dateText").textContent = now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
+  /* ---------- edukasi: kartu bisa diklik, penjelasan muncul di panel bawah ---------- */
+  // Judul kartu dipecah per huruf (dua salinan ditumpuk) untuk animasi berguling; teks asli tetap dibaca pembaca layar.
+  $$(".edu-card h3").forEach(h => {
+    const teks = h.textContent;
+    let i = 0;
+    const kata = teks.split(" ").map(k => `<span class="huruf">${[...k].map(c => `<span class="h"><span style="--i:${i++}"><i>${esc(c)}</i><i>${esc(c)}</i></span></span>`).join("")}</span>`);
+    h.innerHTML = `<span class="sr-only">${esc(teks)}</span><span aria-hidden="true">${kata.join(" ")}</span>`;
+  });
+  $$(".edu-cols ul").forEach(ul => [...ul.children].forEach((li, n) => li.style.setProperty("--n", n)));
+  function bukaEdu(kunci) {
+    const kartu = [...$$(".edu-card")], panel = $("#eduDetail");
+    const sudahTerbuka = kartu.some(k => k.dataset.edu === kunci && k.classList.contains("open"));
+    kartu.forEach(k => { const buka = !sudahTerbuka && k.dataset.edu === kunci; k.classList.toggle("open", buka); k.setAttribute("aria-expanded", buka); });
+    $$(".edu-isi").forEach(s => { s.hidden = sudahTerbuka || s.dataset.isi !== kunci; });
+    panel.hidden = sudahTerbuka || !kunci;
+    if (!panel.hidden) {
+      panel.style.animation = "none"; void panel.offsetWidth; panel.style.animation = "";   // ulangi animasi masuk
+      setTimeout(() => panel.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+    }
+  }
+  $$(".edu-card").forEach(k => {
+    k.addEventListener("click", () => bukaEdu(k.dataset.edu));
+    k.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bukaEdu(k.dataset.edu); } });
+  });
+  $("#eduTutup").addEventListener("click", () => {
+    const aktif = $(".edu-card.open");
+    bukaEdu(null);
+    if (aktif) aktif.focus({ preventScroll: true });
+  });
+
   /* ---------- riwayat ---------- */
   const pill = label => `<span class="pill ${label === "Risiko tinggi" ? "high" : "low"}">${esc(label)}</span>`;
 

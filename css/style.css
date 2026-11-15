@@ -142,5 +142,55 @@ tbody tr{transition:background .2s ease}tbody tr:hover{background:#f6fbf9}
 .sandi-box small{font-size:10px;letter-spacing:.06em;color:var(--muted)}
 .sandi-box code{display:block;margin:6px 0;font-size:22px;font-weight:800;letter-spacing:.12em;color:var(--gd);font-family:ui-monospace,Consolas,monospace;word-break:break-all}
 .sandi-box p{margin:0;font-size:11px;color:var(--ink);max-width:520px}
+/* 9. Edukasi interaktif (2026-11-15): kartu bisa diklik, judul berguling per huruf, panel penjelasan */
+.edu-card{position:relative;overflow:hidden;cursor:pointer;border:1px solid transparent;transition:translate .3s ease,box-shadow .3s ease,border-color .3s ease,background-color .5s ease}
+.edu-card>*{position:relative;z-index:1}
+.edu-card::before{content:"";position:absolute;z-index:0;width:240px;height:240px;right:-120px;top:-120px;border-radius:50%;background:currentColor;opacity:.07;transition:transform .6s cubic-bezier(.2,.7,.3,1),opacity .6s ease}
+.edu-card.green .edu-arrow,.edu-card.green .edu-more{color:var(--g)}
+.edu-card.green::before{background:var(--g)}
+.edu-card.green.open,.edu-card.green:focus-visible{border-color:var(--g)}
+.edu-arrow{position:absolute;top:20px;right:20px;font-style:normal;font-size:22px;line-height:1;opacity:.45;transition:transform .5s cubic-bezier(.3,1.4,.5,1),opacity .4s ease}
+.edu-more{display:inline-block;margin-top:6px;font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.8}
+.edu-more::after{content:"↓";display:inline-block;margin-left:5px;transition:transform .4s ease}
+/* judul per huruf: dua salinan huruf ditumpuk, yang terlihat bergeser naik setengah tinggi */
+.huruf{white-space:nowrap}
+.h{display:inline-block;height:1.35em;line-height:1.35em;overflow:hidden;vertical-align:top}
+.h>span{display:flex;flex-direction:column;transition:transform .45s cubic-bezier(.4,0,.2,1);transition-delay:calc(var(--i) * 30ms)}
+.h i{font-style:normal}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.edu-card.open,.edu-card:focus-visible{border-color:currentColor;outline:none}
+.edu-card.open .edu-more::after{transform:rotate(180deg)}
+.edu-card.open::before{transform:scale(4.5);opacity:.1}
+.edu-card.open .edu-arrow{transform:rotate(90deg);opacity:1}
+.edu-card.open .h>span,.edu-card:focus-visible .h>span{transform:translateY(-50%)}
+@media (hover:hover){
+  .edu-card:hover::before{transform:scale(4.5);opacity:.1}
+  .edu-card:hover .edu-arrow{transform:rotate(-45deg);opacity:1}
+  .edu-card.open:hover .edu-arrow{transform:rotate(90deg)}
+  .edu-card:hover .h>span{transform:translateY(-50%)}
+}
+.edu-card:active{translate:0 -1px;transition-duration:.1s}
+/* panel penjelasan */
+.edu-detail{position:relative;margin-top:16px;padding:28px 30px;animation:eduMasuk .5s cubic-bezier(.2,.7,.3,1)}
+.edu-tutup{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:14px;cursor:pointer;transition:transform .3s ease,background .3s ease}
+.edu-tutup:hover{transform:rotate(90deg);background:var(--mint)}
+.edu-isi{color:inherit}
+.edu-isi small{font-size:9px;letter-spacing:1px;font-weight:800}
+.edu-isi.green small{color:#0b8a63}.edu-isi.yellow small{color:#d38b12}.edu-isi.blue small{color:#3d6fd6}
+.edu-isi h2{font:800 22px Manrope;margin:6px 40px 12px 0;color:var(--ink)}
+.edu-isi h4{font:800 13px Manrope;margin:0 0 8px;color:var(--ink)}
+.edu-isi p,.edu-isi li{font-size:13px;line-height:1.75;color:#5f766e}
+.edu-isi ul{margin:0;padding-left:18px}
+.edu-isi li{margin-bottom:4px}
+.edu-isi b{color:var(--ink)}
+.edu-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.edu-cols>div{padding:16px 18px;border-radius:14px;background:#f5f9f7}
+.edu-isi.green .edu-cols>div{background:#eaf8f1}.edu-isi.yellow .edu-cols>div{background:#fff7e8}.edu-isi.blue .edu-cols>div{background:#edf4ff}
+.edu-kecil{font-size:11px!important;color:var(--muted)!important;margin:8px 0 0}
+.edu-isi>*{animation:eduMasuk .5s cubic-bezier(.2,.7,.3,1) backwards}
+.edu-isi>:nth-child(2){animation-delay:.05s}.edu-isi>:nth-child(3){animation-delay:.1s}.edu-isi>:nth-child(4){animation-delay:.16s}.edu-isi>:nth-child(5){animation-delay:.22s}
+.edu-cols li{animation:eduMasuk .45s ease backwards;animation-delay:calc(.2s + var(--n,0) * 50ms)}
+@keyframes eduMasuk{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(max-width:740px){.edu-detail{padding:22px 18px}.edu-cols{grid-template-columns:1fr}.edu-isi h2{font-size:19px}}
 /* Elemen ber-atribut hidden harus selalu tersembunyi, walau punya aturan display sendiri */
 [hidden]{display:none!important}
