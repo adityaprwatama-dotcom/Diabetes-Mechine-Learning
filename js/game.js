@@ -191,7 +191,7 @@
   const $ = s => document.querySelector(s);
   const kanvas = $("#kanvas"), c = kanvas.getContext("2d");
   const gerakKurang = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const WARNA = { teal: "#17504F", nasi: "#FFFDF5", kunyit: "#F4B72A", cabai: "#D63A2A", tinta: "#12292A", kayu: "#8A5A33", kayuTerang: "#A8723F" };
+  const WARNA = { teal: "#17504F", nasi: "#FFF8E8", kunyit: "#FFCA2C", cabai: "#D63A2A", tinta: "#12292A", kayu: "#8A5A33", kayuTerang: "#A8723F" };
   const gambar = {};   // id -> { img, w, h }
 
   // Ubah tiap <g id="..."> di game.html menjadi gambar yang bisa digambar di canvas (sekali saja).

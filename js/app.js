@@ -8,7 +8,7 @@
   const $ = s => document.querySelector(s);
   const $$ = s => document.querySelectorAll(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const NAMA_HALAMAN = { beranda: "Beranda", cek: "Cek Risiko", riwayat: "Riwayat", edukasi: "Edukasi", profil: "Profil", akun: "Akun", admin: "Dasbor Admin" };
+  const NAMA_HALAMAN = { beranda: "Beranda", cek: "Cek Risiko", riwayat: "Riwayat", edukasi: "Edukasi", asisten: "Tanya AI", profil: "Profil", akun: "Akun", admin: "Dasbor Admin" };
   let akun = null;   // pengguna yang sedang login, atau null
 
   let dipilih = null;   // (admin) pengguna yang riwayatnya sedang dibuka
@@ -199,6 +199,7 @@
       $("#sandiLamaHint").textContent = akun.wajib_ganti_sandi ? "Isi dengan kata sandi sementara dari admin." : "Kata sandi yang Anda pakai untuk masuk.";
     }
     muatRiwayat();
+    document.dispatchEvent(new CustomEvent("hc:akun", { detail: { masuk } }));   // untuk js/landing.js
   }
 
   // Saat keluar: hapus data orang sebelumnya dari layar, supaya pengguna berikutnya tidak melihatnya.

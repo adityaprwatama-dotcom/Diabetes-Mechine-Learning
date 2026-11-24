@@ -3,10 +3,85 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#087f69"><title>HealthCheck — Cek Risiko Diabetes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css"></head><body>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/landing.css"><link rel="stylesheet" href="css/asisten.css"><link rel="stylesheet" href="css/maskot-dokter.css"></head><body class="lp-buka">
+<!-- ===== Landing page (tampil pertama sebelum layar login). Gaya: css/landing.css, perilaku: js/landing.js ===== -->
+<div class="lp" id="landing">
+<div class="lp-progress" aria-hidden="true"><div class="lp-progress-isi" id="lpProgress"></div></div>
+<header class="lp-atas"><a class="lp-merek" href="#" id="lpLogo"><span class="lp-merek-ikon">✚</span><span><b>HealthCheck</b><small>DIABETES CARE</small></span></a><button type="button" class="lp-tombol lp-tombol-kecil" data-lp-ke="masuk">Masuk</button></header>
+
+<nav class="lp-titik" aria-label="Bagian halaman" id="lpTitik"></nav>
+
+<!-- Tetesan darah yang melayang dan berpindah saat di-scroll -->
+<div class="lp-tetes" id="lpTetes" aria-hidden="true"><div class="lp-tetes-skala"><div class="lp-tetes-apung">
+<svg class="lp-tetes-svg" viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialGradient id="lpDarah" cx="38%" cy="58%" r="70%"><stop offset="0" stop-color="#ff8f8f"/><stop offset=".45" stop-color="#e2384d"/><stop offset="1" stop-color="#93102a"/></radialGradient>
+<linearGradient id="lpCairan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c41c3a" stop-opacity=".75"/><stop offset="1" stop-color="#7d0a22"/></linearGradient>
+<clipPath id="lpBentuk"><path d="M100 8C100 8 30 100 30 160a70 70 0 0 0 140 0C170 100 100 8 100 8Z"/></clipPath>
+</defs>
+<path d="M100 8C100 8 30 100 30 160a70 70 0 0 0 140 0C170 100 100 8 100 8Z" fill="url(#lpDarah)"/>
+<g clip-path="url(#lpBentuk)">
+<path class="lp-ombak lp-ombak-2" d="M0 176Q50 164 100 176T200 176T300 176T400 176V260H0Z" fill="#b3173a" opacity=".45"/>
+<path class="lp-ombak" d="M0 184Q50 170 100 184T200 184T300 184T400 184V260H0Z" fill="url(#lpCairan)"/>
+<rect class="lp-gula" x="70" y="205" width="9" height="9" rx="2"/>
+<rect class="lp-gula" x="104" y="215" width="7" height="7" rx="2"/>
+<rect class="lp-gula" x="128" y="200" width="10" height="10" rx="2"/>
+<rect class="lp-gula" x="88" y="222" width="6" height="6" rx="1.5"/>
+<rect class="lp-gula" x="116" y="190" width="8" height="8" rx="2"/>
+<circle class="lp-gelembung" cx="60" cy="200" r="4"/><circle class="lp-gelembung" cx="140" cy="215" r="3"/><circle class="lp-gelembung" cx="96" cy="230" r="3.5"/>
+</g>
+<ellipse cx="70" cy="138" rx="13" ry="32" fill="#fff" opacity=".5" transform="rotate(-22 70 138)"/>
+<circle cx="62" cy="190" r="6" fill="#fff" opacity=".35"/>
+</svg></div>
+<div class="lp-riak"><span></span><span></span></div></div></div>
+
+<main class="lp-isi">
+<section class="lp-bagian lp-kiri" data-label="Selamat datang" id="lp-awal"><div class="lp-konten">
+<p class="lp-lencana"><span></span>Skrining awal berbasis machine learning</p>
+<h1 class="lp-judul lp-judul-besar">Kenali Risiko<small>Diabetes Sejak Dini</small></h1>
+<p class="lp-teks">HealthCheck membantu Anda memperkirakan risiko diabetes hanya dari beberapa data diri sederhana. Cepat, gratis, dan hasilnya tersimpan aman di akun Anda.</p>
+<div class="lp-aksi"><button type="button" class="lp-tombol" data-lp-ke="daftar">Mulai cek risiko →</button><button type="button" class="lp-tombol lp-tombol-dua" data-lp-gulir="1">Pelajari dulu</button></div>
+<div class="lp-ciri"><span><i></i>Gratis &amp; cepat</span><span><i></i>Gulir untuk menjelajah</span></div>
+</div></section>
+
+<section class="lp-bagian lp-tengah" data-label="Mengapa penting"><div class="lp-konten">
+<p class="lp-lencana"><span></span>Mengapa penting</p>
+<h2 class="lp-judul">Diabetes sering datang <em>diam-diam</em></h2>
+<p class="lp-teks">Banyak orang tidak merasakan gejala apa pun sampai kadar gula darah sudah tinggi bertahun-tahun. Mengetahui risiko lebih awal memberi waktu untuk mengubah kebiasaan sebelum terlambat.</p>
+<div class="lp-angka">
+<div><b>19,5 juta</b><span>orang dewasa di Indonesia hidup dengan diabetes</span></div>
+<div><b>1 dari 2</b><span>orang dewasa dengan diabetes di dunia belum terdiagnosis</span></div>
+<div><b>Bisa dicegah</b><span>diabetes tipe 2 dapat dicegah atau ditunda dengan pola hidup sehat</span></div>
+</div>
+<p class="lp-sumber">Sumber angka: IDF Diabetes Atlas edisi ke-10 (2021).</p>
+</div></section>
+
+<section class="lp-bagian lp-kiri" data-label="Cara kerja"><div class="lp-konten">
+<p class="lp-lencana"><span></span>Cara kerja</p>
+<h2 class="lp-judul">Empat langkah<small>menuju hidup lebih sehat</small></h2>
+<p class="lp-teks">Semua dirancang sederhana supaya siapa pun bisa memakainya, tanpa perlu hasil laboratorium.</p>
+<div class="lp-fitur">
+<div><i>1</i><div><h3>Isi 7 data diri</h3><p>Usia, jenis kelamin, berat dan tinggi badan, kadar gula darah, hipertensi, penyakit jantung, dan riwayat merokok.</p></div></div>
+<div><i>2</i><div><h3>Dapatkan skor risiko</h3><p>Model Logistic Regression menghitung skor risiko dan menunjukkan faktor yang paling memengaruhinya.</p></div></div>
+<div><i>3</i><div><h3>Ikuti saran dan pantau riwayat</h3><p>Terima rekomendasi umum, lalu bandingkan hasil dari waktu ke waktu di menu Riwayat.</p></div></div>
+<div><i>4</i><div><h3>Belajar sambil bermain</h3><p>Pahami diabetes lewat halaman Edukasi dan game "Tangkap makanan sehat".</p></div></div>
+</div>
+</div></section>
+
+<section class="lp-bagian lp-tengah" data-label="Mulai sekarang"><div class="lp-konten">
+<p class="lp-lencana"><span></span>Mulai sekarang</p>
+<h2 class="lp-judul">Langkah kecil hari ini<small>untuk masa depan yang sehat</small></h2>
+<p class="lp-teks">Buat akun gratis untuk mulai cek risiko dan menyimpan riwayat pemeriksaan Anda.</p>
+<div class="lp-aksi"><button type="button" class="lp-tombol" data-lp-ke="daftar">Buat akun gratis</button><button type="button" class="lp-tombol lp-tombol-dua" data-lp-ke="masuk">Saya sudah punya akun</button></div>
+<p class="lp-catatan">HealthCheck adalah alat skrining awal untuk edukasi, <b>bukan diagnosis medis</b>. Konsultasikan hasilnya dengan dokter atau tenaga kesehatan.</p>
+</div></section>
+</main>
+<div class="lp-kaki">© 2026 HealthCheck · Projek Akhir III · Bukan alat diagnosis medis</div>
+</div>
 <div class="gate" id="gate">
 <div class="gate-split">
 <section class="gate-form-side"><div class="gate-card">
+<button type="button" class="lp-kembali" id="lpKembali">← Halaman utama</button>
 <div class="gate-head"><span class="brand-icon">✚</span><div><b>HealthCheck</b><small>DIABETES CARE</small></div></div>
 <h1 class="gate-title">Masuk ke HealthCheck</h1>
 <p class="gate-sub">Cek risiko diabetes dan simpan riwayatnya di akun Anda.</p>
@@ -47,6 +122,7 @@
 <a class="nav-link" data-nav="cek" href="#cek"><i>✚</i>Cek Risiko</a>
 <a class="nav-link" data-nav="riwayat" href="#riwayat"><i>◷</i>Riwayat</a>
 <a class="nav-link" data-nav="edukasi" href="#edukasi"><i>▤</i>Edukasi</a>
+<a class="nav-link" data-nav="asisten" href="#asisten"><i>✦</i>Tanya AI</a>
 <a class="nav-link" href="game.html"><i>▶</i>Main &amp; Belajar</a>
 <a class="nav-link" data-nav="profil" href="#profil"><i>◎</i>Profil</a>
 <a class="nav-link" data-nav="akun" href="#akun" id="navAkun"><i>⚿</i><span id="navAkunText">Akun saya</span></a>
@@ -60,7 +136,7 @@
 <section class="page active" id="beranda">
 <div class="welcome"><div><p class="eyebrow">● HEALTHY LIVING STARTS HERE</p><h1>Halo, selamat datang! <em>✦</em></h1><p>Kenali risiko diabetes lebih awal dan mulai jaga kesehatan dari sekarang.</p></div><span class="date-chip" id="dateText"></span></div>
 <div class="hero"><div class="hero-copy"><span class="tag">PEMERIKSAAN AWAL BERBASIS AI</span><h2>Kenali risiko diabetes.<br><em>Jaga kesehatanmu.</em></h2><p>Isi beberapa informasi kesehatan sederhana untuk mendapatkan gambaran awal tingkat risiko diabetes.</p><a class="btn white" href="#cek">Mulai cek risiko <b>→</b></a><div class="hero-points">✓ Cepat &nbsp;&nbsp; ✓ Mudah &nbsp;&nbsp; ✓ Informatif</div></div>
-<div class="hero-visual"><div class="orbit"></div><div class="family"><div class="person p1"><i></i><b></b></div><div class="person p2"><i></i><b></b></div><div class="person p3"><i></i><b></b></div></div><div class="meter"><small>GLUCOSE CHECK</small><strong>98</strong><span>mg/dL</span><hr></div><span class="plus">＋</span><span class="heart">♡</span></div></div>
+<div class="hero-visual"><div class="orbit"></div><button type="button" class="dokter" data-dokter data-sapa-masuk aria-label="Sapa dokter HealthCheck" data-sapa="Halooo! Saya dokter maskot HealthCheck.|Sudah cek risiko diabetes hari ini?|Jangan lupa minum air putih, ya!|Yuk jalan kaki 30 menit hari ini.|Hehe, geli kalau diklik terus :)"></button><div class="meter"><small>GLUCOSE CHECK</small><strong>98</strong><span>mg/dL</span><hr></div><span class="plus">＋</span><span class="heart">♡</span></div></div>
 <div class="stats">
 <article><span class="stat-icon mint">✚</span><div><small>Pemeriksaan</small><b id="totalChecks">0</b><small>Total pemeriksaan tersimpan</small></div></article>
 <article><span class="stat-icon yellow">⌁</span><div><small>Metode</small><b>Logistic Regression</b><small>Model machine learning</small></div></article>
@@ -113,7 +189,57 @@
 <p class="edu-kecil">Informasi ini bersifat umum dan bukan pengganti nasihat tenaga kesehatan.</p>
 </div><div class="panel edu-note"><b>Ingat:</b> Diabetes tidak dapat dipastikan hanya dari gejala atau hasil prediksi aplikasi. Diagnosis memerlukan pemeriksaan medis.</div></section>
 
-<section class="page" id="profil"><div class="intro"><p class="eyebrow">TENTANG APLIKASI</p><h1>Profil HealthCheck</h1><p>Informasi sistem dan teknologi yang digunakan dalam proyek ini.</p></div><div class="profile-grid"><article class="panel profile-card"><span class="profile-logo">✚</span><h2>HealthCheck</h2><p>Sistem skrining awal risiko diabetes berbasis machine learning.</p><div class="meta"><span>Nama model</span><b>Logistic Regression</b><span>Backend</span><b>Python + Flask API</b><span>Frontend</span><b>HTML, CSS, JavaScript</b><span>Endpoint</span><b>POST /predict</b></div></article><article class="panel"><p class="eyebrow">BATASAN SISTEM</p><h3>Gunakan hasil dengan bijak</h3><p>Model menghasilkan kategori dan skor berdasarkan tujuh fitur masukan. Skor model bukan peluang pasti seseorang menderita diabetes.</p><p>Untuk mengetahui kondisi kesehatan, lakukan pemeriksaan laboratorium dan konsultasi dengan dokter atau tenaga kesehatan.</p><div class="api-status" id="apiStatus">Memeriksa koneksi API...</div></article></div></section>
+<section class="page" id="asisten"><div class="intro"><p class="eyebrow">ASISTEN KESEHATAN</p><h1>Tanya AI</h1><p>Tanyakan apa saja seputar diabetes dan kesehatan. Jawaban dibuat oleh AI dan bersifat informasi umum, bukan diagnosis.</p></div>
+<article class="panel chat-panel"><div class="chat-head"><div class="chat-id"><span class="chat-ava" aria-hidden="true">✦</span><div><b>Asisten HealthCheck</b><small>Didukung AI melalui Groq</small></div></div><button class="btn outline small" id="chatBaru" type="button">Obrolan baru</button></div>
+<div class="chat-log" id="chatLog" aria-live="polite">
+<div class="chat-sambut dk-sambut" id="chatSambut">
+<!-- Poster sambutan beranimasi (css/maskot-dokter.css, js/maskot-dokter.js) -->
+<div class="dk-poster"><div class="dk-panggung">
+<svg class="dk-ruang" data-ruang viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+<div class="dk-atas"><span class="dk-index"><b>24/7</b>Asisten kesehatan</span><span class="dk-slogan">Tanya dengan tenang</span><span class="dk-kurung">{ Diabetes / Gizi }</span><span class="dk-label"><i aria-hidden="true"></i><span>HealthCheck AI<br>Bukan diagnosis</span></span></div>
+<span class="dk-garis dk-garis-kiri" aria-hidden="true"></span><span class="dk-garis dk-garis-kanan" aria-hidden="true"></span>
+<h3 class="dk-judul" aria-label="Tanya AI seputar diabetes dan hidup sehat">
+<span class="dk-baris" aria-hidden="true"><span data-huruf>Tanya</span><svg class="dk-panah" viewBox="0 0 100 100"><path d="M14 14 L84 84 M84 30 V84 H30"/></svg><span data-huruf>AI</span><span class="dk-cap">Gratis<sup>*</sup></span></span>
+<span class="dk-baris" aria-hidden="true"><span data-huruf>Seputar</span></span>
+<span class="dk-baris" aria-hidden="true"><span data-huruf>Diabete</span><span class="dk-lengkung"><span class="dk-ch">s</span><svg viewBox="0 0 255 72" preserveAspectRatio="none"><path pathLength="1" d="M6 44 C40 18 150 4 222 14 C262 20 258 48 214 58 C150 72 60 70 30 60 C10 53 20 40 60 34"/></svg></span></span>
+<span class="dk-baris dk-b4" aria-hidden="true"><span data-huruf>Seha</span><span class="dk-vtag"><span>INFO</span><i></i></span><span class="dk-kurawal"><svg viewBox="0 0 100 120" preserveAspectRatio="none"><path class="dk-busur-a" vector-effect="non-scaling-stroke" d="M4 16 Q50 -8 96 16"/><path class="dk-busur-b" vector-effect="non-scaling-stroke" d="M4 104 Q50 128 96 104"/></svg>t</span><span class="dk-bintang">*</span></span>
+</h3>
+<svg class="dk-ikal" viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M92 8 C70 6 52 22 58 40 C63 56 84 52 80 36 C76 22 50 30 40 48 C32 62 26 74 16 84 M14 66 L14 86 L34 86"/></svg>
+<div class="dk-pil"><span class="dk-pil-a">Mulai*</span><button type="button" class="dk-pil-b" data-fokus="#chatInput">Ketik pertanyaan<em aria-hidden="true">→</em></button></div>
+<div class="dk-bunga" aria-hidden="true"><svg viewBox="0 0 120 120"><path/><circle cx="60" cy="60" r="4" fill="none" stroke="#193d39" stroke-width="2"/></svg></div>
+<button type="button" class="dokter" data-dokter aria-label="Sapa dokter HealthCheck" data-sapa="Halo! Mau tanya apa hari ini?|Tanya soal gula darah, gizi, atau olahraga.|Ingat, saya bukan pengganti dokter sungguhan.|Oke, oke, saya siap menjawab :)"></button>
+</div></div>
+<p class="dk-saran-judul">Atau pilih contoh pertanyaan:</p><div class="chat-saran">
+<button type="button">Apa beda diabetes tipe 1 dan tipe 2?</button>
+<button type="button">Berapa kadar gula darah puasa yang normal?</button>
+<button type="button">Contoh menu sarapan sehat untuk penderita diabetes</button>
+<button type="button">Skor risiko saya tinggi, apa yang sebaiknya saya lakukan?</button>
+</div></div></div>
+<form class="chat-form" id="chatForm"><textarea id="chatInput" rows="1" maxlength="4000" placeholder="Tulis pertanyaan kesehatan Anda..." aria-label="Pertanyaan"></textarea><button class="btn primary" id="chatKirim" type="submit" aria-label="Kirim">Kirim ➤</button></form>
+<p class="chat-catatan">AI bisa keliru. Untuk keluhan serius, temui dokter. Darurat: hubungi <b>119</b> atau ke IGD terdekat. Jangan menulis data pribadi seperti nama lengkap, NIK, atau alamat.</p></article></section>
+
+<section class="page" id="profil"><div class="intro"><p class="eyebrow">TENTANG APLIKASI</p><h1>Profil HealthCheck</h1><p>Kenali cara kerja HealthCheck, data yang dipakai, seberapa baik modelnya, dan batasannya.</p></div>
+<div class="prof-top">
+<article class="panel profile-card"><span class="profile-logo">✚</span><h2>HealthCheck</h2><p>Website skrining awal risiko diabetes berbasis machine learning. Dibuat sebagai Projek Akhir III untuk membantu masyarakat mengenali risiko diabetes lebih dini.</p><div class="meta"><span>Model</span><b>Logistic Regression</b><span>Dataset</span><b>Diabetes Prediction Dataset (Kaggle)</b><span>Backend</span><b>Python Flask + MySQL</b><span>Frontend</span><b>HTML, CSS, JavaScript</b></div><div class="api-status" id="apiStatus">Memeriksa koneksi API...</div></article>
+<article class="panel"><p class="eyebrow">CARA KERJA</p><h3>Dari isian form sampai hasil</h3>
+<div class="step"><b>1</b><div><strong>Isi data diri</strong><p>Usia, jenis kelamin, berat dan tinggi badan, kadar gula darah, serta riwayat kesehatan.</p></div></div>
+<div class="step"><b>2</b><div><strong>Data dikirim ke API</strong><p>Server Flask menerima data dan hanya memprosesnya bila Anda sudah masuk ke akun.</p></div></div>
+<div class="step"><b>3</b><div><strong>Model menghitung skor</strong><p>Logistic Regression memberi skor risiko model dan kategori risiko rendah atau tinggi.</p></div></div>
+<div class="step"><b>4</b><div><strong>Hasil dan saran</strong><p>Anda melihat faktor yang paling menaikkan skor dan rekomendasi umum. Hasil tersimpan di menu Riwayat.</p></div></div>
+</article></div>
+<article class="panel prof-block"><p class="eyebrow">DATA YANG DIPAKAI MODEL</p><h3>7 data masukan</h3><p class="prof-lead">Semua pertanyaan di form sesuai dengan kolom pada dataset. Nilai HbA1c tidak ditanyakan karena jarang diketahui orang awam.</p>
+<ul class="prof-chips"><li>🧑 Jenis kelamin</li><li>🎂 Usia</li><li>⚖️ BMI (dari berat dan tinggi)</li><li>🩸 Kadar gula darah</li><li>💓 Hipertensi</li><li>❤️ Penyakit jantung</li><li>🚭 Riwayat merokok</li></ul></article>
+<article class="panel prof-block"><p class="eyebrow">KINERJA MODEL</p><h3>Hasil uji pada 19.226 data</h3><p class="prof-lead">Model dilatih dengan 96.128 data setelah dibersihkan, lalu diuji dengan 20% data yang belum pernah dilihat model.</p>
+<div class="prof-metrics">
+<div><b>80,2%</b><span>Recall</span><p>Dari 100 orang yang benar-benar diabetes, sekitar 80 terdeteksi berisiko tinggi.</p></div>
+<div><b>81,3%</b><span>Akurasi</span><p>Persentase seluruh tebakan model yang benar.</p></div>
+<div><b>0,901</b><span>AUC</span><p>Kemampuan membedakan berisiko dan tidak berisiko (maksimal 1).</p></div>
+<div><b>29,4%</b><span>Presisi</span><p>Banyak hasil "risiko tinggi" ternyata tidak diabetes, jadi perlu dipastikan dengan tes laboratorium.</p></div>
+</div></article>
+<div class="profile-grid prof-bottom">
+<article class="panel"><p class="eyebrow">BATASAN SISTEM</p><h3>Gunakan hasil dengan bijak</h3><ul class="prof-list"><li>HealthCheck <b>bukan alat diagnosis</b>. Skor model bukan peluang pasti seseorang menderita diabetes.</li><li>Model tidak memakai HbA1c dan hasil lab lain, sehingga ketepatannya terbatas.</li><li>Kadar gula darah yang diisi sangat memengaruhi hasil. Gunakan hasil pengukuran yang benar.</li><li>Untuk memastikan kondisi kesehatan, lakukan pemeriksaan laboratorium dan konsultasi dengan dokter.</li></ul></article>
+<article class="panel"><p class="eyebrow">PRIVASI DATA</p><h3>Data Anda tetap milik Anda</h3><ul class="prof-list"><li>Hasil pemeriksaan hanya disimpan bila Anda menyetujuinya saat mendaftar.</li><li>Riwayat tersimpan di akun Anda dan dapat dihapus kapan saja.</li><li>Kata sandi disimpan dalam bentuk hash (terenkripsi satu arah), bukan teks asli.</li><li>Website ini berjalan secara lokal untuk keperluan proyek, bukan layanan kesehatan resmi.</li></ul></article>
+</div></section>
 
 <section class="page" id="akun"><div class="intro"><p class="eyebrow">AKUN PENGGUNA</p><h1 id="akunJudul">Akun saya</h1><p>Informasi akun yang sedang Anda pakai.</p></div>
 <div class="profile-grid" id="accountBox" hidden><article class="panel profile-card"><span class="profile-logo" id="akunAvatar">A</span><h2 id="akunNama">-</h2><p id="akunEmail">-</p><div class="meta"><span>Peran</span><b id="akunPeran">-</b><span>Riwayat</span><b>Tersimpan di database</b></div><div class="actions center"><a class="btn outline" href="#riwayat">Lihat riwayat</a><button class="btn primary" type="button" id="logoutBtn2">Keluar</button></div></article>
@@ -141,4 +267,4 @@
 <div class="error" id="adminError" hidden></div></section>
 <footer>© 2026 HealthCheck <span>Proyek edukasi · Bukan alat diagnosis medis</span></footer>
 </main></div>
-<script src="js/config.js"></script><script src="js/questions.js"></script><script src="js/app.js"></script></body></html>
+<script src="js/config.js"></script><script src="js/questions.js"></script><script src="js/landing.js"></script><script src="js/app.js"></script><script src="js/asisten.js"></script><script src="js/maskot-dokter.js"></script></body></html>

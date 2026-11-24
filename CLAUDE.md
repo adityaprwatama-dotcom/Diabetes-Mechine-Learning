@@ -20,12 +20,12 @@ Riwayat keputusan, metrik, desain Figma, dan daftar tugas: @docs/KONTEKS.md
 3. **Jangan ubah atribut `name` di form `index.html` (dan `id` di `js/questions.js`).** Nilainya = nama kolom dataset yang dikirim ke API. Form yang dipakai sekarang ditulis langsung di `index.html`; `js/app.js` membaca `name` itu.
 4. Bila daftar fitur berubah: ubah `FITUR` di skrip pelatihan, latih ulang, lalu uji ulang API dan form. `app.py` membaca `fitur.json`.
 5. Skor model bukan peluang pasti (`class_weight="balanced"`). Di UI pakai istilah "skor risiko model".
-6. **Wajib login** (keputusan 2026-11-06): website dibuka langsung tampil layar Masuk/Daftar (`#gate` di `index.html`); `/predict` menolak (401) bila belum login. Tidak ada mode tamu dan tidak ada riwayat di browser. Semua hasil disimpan ke MySQL dengan persetujuan saat daftar (`setuju_simpan`). Teks di halaman Riwayat/Hasil/Daftar harus selalu jujur soal tempat penyimpanan.
+6. **Wajib login** (keputusan 2026-11-06): website dibuka dengan landing page (`#landing`, sejak 2026-11-17), lalu layar Masuk/Daftar (`#gate` di `index.html`); `/predict` dan `/asisten/chat` menolak (401) bila belum login. Tidak ada mode tamu dan tidak ada riwayat di browser. Semua hasil disimpan ke MySQL dengan persetujuan saat daftar (`setuju_simpan`). Teks di halaman Riwayat/Hasil/Daftar harus selalu jujur soal tempat penyimpanan.
 7. Keamanan login: kata sandi hanya disimpan sebagai hash; query MySQL selalu berparameter (`%s`); kredensial hanya di `.env` (tidak di-commit); admin dibuat lewat `python buat_admin.py`, tidak lewat website.
 
 ## Teknologi
 - Frontend: HTML, CSS, JavaScript biasa (tanpa framework). Nama website: "HealthCheck" (sudah diputuskan). Tampilan: dasbor dengan menu samping, warna hijau, font DM Sans dan Manrope (Google Fonts).
-- Backend: Flask + flask-cors, port 8000. Endpoint `GET /health`, `POST /predict`; login/riwayat/admin di `auth.py` (`/auth/*`, `/riwayat`, `/admin/*`, termasuk `/admin/grafik`, `/admin/ekspor.csv`, `DELETE /admin/pengguna/<id>`). Sesi cookie HttpOnly SameSite=Lax; CORS hanya untuk `CORS_ORIGINS` di `.env` (default 127.0.0.1:5500 dan localhost:5500).
+- Backend: Flask + flask-cors, port 8000. Endpoint `GET /health`, `POST /predict`; login/riwayat/admin di `auth.py` (`/auth/*`, `/riwayat`, `/admin/*`, termasuk `/admin/grafik`, `/admin/ekspor.csv`, `DELETE /admin/pengguna/<id>`); Tanya AI di `asisten.py` (`POST /asisten/chat`, Groq). Sesi cookie HttpOnly SameSite=Lax; CORS hanya untuk `CORS_ORIGINS` di `.env` (default 127.0.0.1:5500 dan localhost:5500).
 - Database: MySQL/MariaDB 10.4 dari XAMPP (`C:\xampp`), database `healthcheck` (tabel `users`, `riwayat`, lihat `schema.sql`), user MySQL `healthcheck` (bukan root). Karena wajib login, website TIDAK bisa dipakai bila MySQL mati (login dan cek risiko menjawab 503 dengan pesan jelas).
 - Model: scikit-learn Pipeline (OneHotEncoder + StandardScaler + LogisticRegression) disimpan sebagai `model_diabetes.pkl`; daftar fitur di `fitur.json`.
 - Live Server VS Code di port 5500.
@@ -33,20 +33,28 @@ Riwayat keputusan, metrik, desain Figma, dan daftar tugas: @docs/KONTEKS.md
 
 ## Struktur proyek
 ```
-index.html                 halaman utama (Beranda, Cek Risiko, Riwayat, Edukasi, Profil, Akun, Dasbor Admin); form ditulis langsung di sini
+index.html                 landing page + halaman utama (Beranda, Cek Risiko, Riwayat, Edukasi, Tanya AI, Profil, Akun, Dasbor Admin); form ditulis langsung di sini
 css/style.css              warna dan font di :root
+css/tema-asli/             cadangan tema lama (salinan index.html, style.css, game.*); tidak dimuat website
+css/landing.css, js/landing.js            landing page (tampil sebelum layar login)
+css/asisten.css, js/asisten.js            menu Tanya AI (obrolan hanya di memori halaman)
+css/maskot-dokter.css, js/maskot-dokter.js  maskot dokter beranimasi (Beranda dan sambutan Tanya AI)
 js/config.js               API_URL (tidak dipakai; app.js memakai http://<host halaman>:8000)
 js/questions.js            daftar pertanyaan; dimuat tetapi SAAT INI TIDAK DIPAKAI oleh app.js
 js/app.js                  layar login pembuka, validasi, BMI, panggil API, hasil, riwayat (database), dasbor admin
 app.py                     API Flask (prediksi) + mendaftarkan auth.py
 auth.py                    endpoint login, riwayat database, admin
+asisten.py                 endpoint Tanya AI (Groq; butuh GROQ_API_KEY di .env)
 db.py                      koneksi MySQL, membaca .env
 schema.sql                 membuat database healthcheck (aman dijalankan ulang)
 buat_admin.py              membuat akun admin (kata sandi diketik tersembunyi)
 .env.example               contoh pengaturan; .env asli TIDAK di-commit
 train_model_dpd.py         pelatihan model
+banding_model.py           perbandingan Logistic Regression dengan 5 algoritma lain (tidak menyimpan model)
 test_api.py                uji API prediksi (butuh MySQL; memakai akun uji sementara yang dihapus otomatis)
-test_auth.py               uji login/riwayat/admin/keamanan (46 pengecekan, butuh MySQL; akun uji @uji.healthcheck.local dihapus otomatis)
+test_auth.py               uji login/riwayat/admin/keamanan (61 pengecekan, butuh MySQL; akun uji @uji.healthcheck.local dihapus otomatis)
+test_asisten.py            uji Tanya AI (15 pengecekan; MySQL, login, dan Groq dipalsukan, tidak memakai kuota)
+docs/SRS_HealthCheck.docx  dokumen SRS (versi 1.3, 2026-11-24)
 requirements.txt           daftar library dengan versi terkunci
 README.md                  cara memasang dan menjalankan (untuk anggota kelompok)
 .gitignore                 __pycache__, .env, venv tidak di-upload
@@ -58,6 +66,11 @@ dataset/diabetes_prediction_dataset.csv   dari Kaggle, IKUT di-commit (keputusan
 - File: `game.html`, `css/game.css`, `js/game.js` (KONFIG aturan main di paling atas), `js/audio.js` (suara sintesis Web Audio). Menu "Main & Belajar" di `index.html` menuju `game.html`. Acuan desain: `desain_Game/` (SVG makanan disalin ke `<defs>` di `game.html`).
 - Berdiri sendiri: tidak memakai model ML, tidak mengirim data. Wajib login: `game.html` cek `/auth/saya`, belum masuk dialihkan ke `index.html`.
 - localStorage hanya untuk rekor (`hc_game_rekor`) dan pengaturan suara (`hc_game_suara`). Fakta "Tahukah kamu?" tanpa angka; kolom sumber masih kosong (diisi dari Kemenkes/WHO).
+
+## Tanya AI (asisten kesehatan)
+- `asisten.py` + `js/asisten.js`. Model Groq bawaan `openai/gpt-oss-120b` (ganti lewat `ASISTEN_MODEL` di `.env`). Kunci `GROQ_API_KEY` hanya di `.env`; bila kosong, menu menjawab 503 "belum diaktifkan".
+- Wajib login. Obrolan TIDAK disimpan di MySQL (hanya di memori halaman), tetapi dikirim ke server Groq: halaman meminta pengguna tidak menulis data pribadi.
+- Batas: 30 pertanyaan/pengguna/jam (di memori API), 4.000 karakter per pertanyaan. Prompt sistem melarang diagnosis dan anjuran dosis obat, darurat diarahkan ke 119/IGD.
 
 ## GitHub
 Repo: https://github.com/adityaprwatama-dotcom/Diabetes-Mechine-Learning (public, cabang `main`).
@@ -75,6 +88,8 @@ python train_model_dpd.py     # membuat model_diabetes.pkl dan fitur.json
 python app.py                 # API http://127.0.0.1:8000 (biarkan terbuka)
 python test_api.py            # di terminal lain (butuh MySQL menyala)
 python test_auth.py           # butuh MySQL XAMPP menyala
+python test_asisten.py        # tanpa MySQL dan tanpa memakai kuota Groq
+python banding_model.py       # tabel perbandingan 6 algoritma
 python buat_admin.py          # membuat akun admin
 C:\xampp\mysql\bin\mysql.exe -u root -e "source schema.sql"   # membuat tabel (PowerShell tidak mendukung "<")
 ```

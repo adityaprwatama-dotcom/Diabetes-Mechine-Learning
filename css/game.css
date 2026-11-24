@@ -4,13 +4,13 @@
    (persen lebar papan), jadi tampilan ikut mengecil di layar HP. */
 :root {
   --teal: #17504F;
-  --nasi: #FFFDF5;
-  --kunyit: #F4B72A;
+  --nasi: #fff8e8;
+  --kunyit: #ffca2c;
   --cabai: #D63A2A;
   --daun: #4F9A45;
   --daun-tua: #2F7D3B;
   --tinta: #12292A;
-  --latar: #e3ebe5;
+  --latar: #eef7f2;
   --abu: #3f5c58;
 }
 * { box-sizing: border-box; }
@@ -58,7 +58,7 @@ body { margin: 0; background: var(--latar); color: var(--tinta); font: 16px/1.5 
 .papan { container: papan / inline-size; position: relative; background: var(--teal); color: var(--nasi);
   border: 6px solid var(--nasi); border-radius: 16px; box-shadow: 0 14px 30px rgba(18, 41, 42, .28); overflow: hidden; }
 /* garis tipis di dalam bingkai */
-.papan::before { content: ""; position: absolute; inset: 9px; border: 1.5px solid rgba(255, 253, 245, .4); border-radius: 8px; pointer-events: none; z-index: 3; }
+.papan::before { content: ""; position: absolute; inset: 9px; border: 1.5px solid rgba(255, 252, 245, .4); border-radius: 8px; pointer-events: none; z-index: 3; }
 /* empat paku keling di sudut */
 .papan::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3;
   background:
@@ -83,9 +83,9 @@ body { margin: 0; background: var(--latar); color: var(--tinta); font: 16px/1.5 
 .tbl:active { transform: translateY(1px); }
 .tbl:disabled { opacity: .65; cursor: wait; }
 .tbl-kunyit { background: var(--kunyit); color: var(--tinta); }
-.tbl-kunyit:hover:not(:disabled) { background: #ffc53f; }
+.tbl-kunyit:hover:not(:disabled) { background: #ffcf3f; }
 .tbl-garis { background: transparent; color: var(--nasi); border-color: var(--nasi); }
-.tbl-garis:hover { background: rgba(255, 253, 245, .12); }
+.tbl-garis:hover { background: rgba(255, 252, 245, .12); }
 .tbl-teal { background: var(--teal); color: var(--nasi); }
 .tbl-teks { background: none; border: 0; padding: 8px 0; color: inherit; font: 700 15px "DM Sans", sans-serif;
   text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -138,7 +138,7 @@ body { margin: 0; background: var(--latar); color: var(--tinta); font: 16px/1.5 
 .peringatan { display: inline-block; margin: 6px 0 0; padding: 2px 8px; border-radius: 4px; background: var(--cabai); color: var(--nasi);
   font-weight: 700; font-size: clamp(12px, 1.8cqw, 13px); text-shadow: none; }
 .hud-gula.bahaya .bar-gula { animation: kedip .5s ease-in-out infinite alternate; }
-@keyframes kedip { to { box-shadow: 0 0 0 4px rgba(244, 183, 42, .75); } }
+@keyframes kedip { to { box-shadow: 0 0 0 4px rgba(255, 199, 31, .75); } }
 .hud-mangkuk { text-align: right; }
 #hudMangkuk { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; }
 #hudMangkuk svg { width: clamp(24px, 4.6cqw, 34px); transition: opacity .3s ease; }
@@ -181,7 +181,7 @@ body { margin: 0; background: var(--latar); color: var(--tinta); font: 16px/1.5 
 /* Bila pengguna memilih "kurangi gerakan": efek dikurangi, permainan tetap jalan */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
-  .hud-gula.bahaya .bar-gula { box-shadow: 0 0 0 4px rgba(244, 183, 42, .75); }
+  .hud-gula.bahaya .bar-gula { box-shadow: 0 0 0 4px rgba(255, 199, 31, .75); }
   .kertas { transform: none; }
 }
 

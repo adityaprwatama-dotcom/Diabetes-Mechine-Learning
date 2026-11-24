@@ -10,3 +10,5 @@ joblib==1.6.0
 # Login + MySQL (XAMPP)
 PyMySQL==1.2.3
 python-dotenv==1.2.4
+# Asisten AI (menu Tanya AI) memakai Groq
+groq==1.7.0

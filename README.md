@@ -86,6 +86,7 @@ schema.sql                 tabel users dan riwayat
 buat_admin.py              membuat akun admin
 .env.example               contoh pengaturan (salin menjadi .env, jangan upload .env)
 train_model_dpd.py         pelatihan model
+banding_model.py           perbandingan Logistic Regression dengan 5 algoritma lain (tidak menyimpan model)
 test_api.py                uji API prediksi
 test_auth.py               uji login, riwayat, admin, dan keamanan
 model_diabetes.pkl         model hasil pelatihan
@@ -101,6 +102,24 @@ docs/KONTEKS.md            riwayat keputusan, metrik, status proyek
 | Presisi | 0,294 |
 | Recall | 0,802 |
 | ROC AUC | 0,901 |
+
+### Perbandingan dengan algoritma lain
+Dijalankan dengan `python banding_model.py` (data, fitur, dan pembagian data sama dengan `train_model_dpd.py`).
+
+| Algoritma | Akurasi | Presisi | Recall | F1 | ROC AUC | Terlewat | Salah alarm |
+|---|---|---|---|---|---|---|---|
+| **Logistic Regression (dipakai)** | 81,3% | 29,4% | 80,2% | 43,1% | 90,1% | 336 | 3.262 |
+| Decision Tree | 81,8% | 30,3% | 82,3% | 44,3% | 91,5% | 301 | 3.203 |
+| Random Forest | 85,8% | 36,0% | 77,7% | 49,2% | 91,8% | 379 | 2.344 |
+| Gradient Boosting | 82,7% | 32,0% | 85,8% | 46,6% | 93,0% | 241 | 3.094 |
+| K-Nearest Neighbors (k=15) | 94,2% | 88,1% | 39,3% | 54,4% | 87,5% | 1.029 | 90 |
+| Naive Bayes | 87,8% | 37,7% | 58,0% | 45,7% | 85,5% | 713 | 1.624 |
+
+Data uji berisi 8,8% penderita diabetes, jadi menebak "tidak diabetes" untuk semua orang sudah
+mendapat akurasi 91,2%. Karena itu, untuk skrining yang dilihat terutama **recall** (penderita yang
+terdeteksi). Logistic Regression dipilih karena recall-nya tinggi, paling mudah dijelaskan (setiap faktor
+punya bobot, dipakai untuk fitur "faktor yang paling menaikkan skor"), dan selisih AUC-nya dengan model
+terbaik (Gradient Boosting) kecil.
 
 Kolom `HbA1c_level` sengaja tidak dipakai karena membutuhkan tes laboratorium. Rincian dan
 keterbatasan ada di `docs/KONTEKS.md`.

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17504F"><title>Main &amp; Belajar — HealthCheck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/game.css">
+</head><body>
+
+<!-- Bagian atas: kembali ke website, nama halaman, dan pengaturan suara -->
+<header class="atas">
+  <a class="kembali" href="index.html#beranda">
+    <span class="kembali-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="kembali-teks"><small>Kembali ke</small><b>HealthCheck</b></span>
+  </a>
+  <div class="merek"><b>Main &amp; Belajar</b><small id="namaPemain">HealthCheck</small></div>
+  <div class="kontrol-suara" role="group" aria-label="Pengaturan suara">
+    <button class="tbl-suara" id="tblMusik" type="button" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="17" cy="16" r="3" fill="currentColor"/></svg>
+      <span id="labelMusik">musik: hidup</span></button>
+    <button class="tbl-suara" id="tblEfek" type="button" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="gelombang" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span id="labelEfek">efek suara: hidup</span></button>
+    <label class="volume">volume <input type="range" id="volume" min="0" max="100" step="5" value="60"></label>
+  </div>
+</header>
+
+<main class="wadah">
+  <!-- Selama akun diperiksa (wajib login), hanya kotak ini yang tampil -->
+  <div class="cek-akun" id="cekAkun" role="status">
+    <p id="cekAkunTeks">Memeriksa akun...</p>
+    <a class="tbl tbl-teal" id="cekAkunLink" href="index.html" hidden>Buka halaman masuk</a>
+  </div>
+
+  <section class="papan" id="papan" aria-label="Game Tangkap makanan sehat" hidden>
+
+    <!-- 1. Layar mulai -->
+    <div class="layar layar-mulai" id="layarMulai">
+      <div>
+        <h1 class="judul-besar">Tangkap makanan sehat</h1>
+        <p class="sub">Jaga gula darahmu tetap di zona aman.</p>
+        <button class="tbl tbl-kunyit" id="tblMulai" type="button" disabled>Menyiapkan...</button>
+        <p class="petunjuk">Geser piring dengan tombol panah, A dan D, mouse, atau jari. Tekan P atau Esc untuk jeda.</p>
+      </div>
+      <div class="kartu">
+        <h2 class="hijau">Masuk piring</h2>
+        <ul class="grid-ikon" id="ikonBaik"></ul>
+        <hr>
+        <h2 class="merah">Lewatkan saja</h2>
+        <ul class="grid-ikon" id="ikonManis"></ul>
+        <p>Makanan manis membuat gula darah naik. Makanan sehat menambah poin.</p>
+        <button class="tbl-teks" id="tblDaftar" type="button">lihat daftar makanan</button>
+        <p class="kecil">Game ini hanya untuk edukasi, bukan anjuran medis.</p>
+      </div>
+    </div>
+
+    <!-- 4. Daftar makanan -->
+    <div class="layar layar-daftar" id="layarDaftar" hidden>
+      <h2 class="judul-sedang">Daftar makanan</h2>
+      <div class="kartu">
+        <h3 class="hijau">Sehat: tambah 10 poin (air putih 5 poin)</h3>
+        <ul class="grid-nama" id="daftarBaik"></ul>
+      </div>
+      <div class="kartu">
+        <h3 class="merah">Manis: gula darah naik dan poin berkurang</h3>
+        <ul class="grid-nama" id="daftarManis"></ul>
+      </div>
+      <div><button class="tbl tbl-kunyit" id="tblTutupDaftar" type="button">Kembali</button></div>
+    </div>
+
+    <!-- 2. Layar bermain: canvas untuk makanan jatuh, HTML untuk skor dan tombol -->
+    <div class="arena" id="arena" tabindex="-1" hidden>
+      <div class="bingkai-kanvas"><canvas id="kanvas" role="img" aria-label="Area bermain: makanan jatuh dari atas, piring di atas meja di bawah"></canvas></div>
+      <div class="hud">
+        <div class="hud-skor"><small>Skor</small><b id="hudSkor">0</b><small id="hudLevel">Level 1</small></div>
+        <div class="hud-gula" id="hudGula">
+          <small>Gula darah</small>
+          <div class="bar-gula" id="barGula" role="meter" aria-label="Gula darah" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <i class="z-kurang"></i><i class="z-aman"></i><i class="z-tinggi"></i>
+            <svg class="penanda" id="penanda" viewBox="-11 -9 22 24" aria-hidden="true"><use href="#tetes" transform="scale(1 -1)"/></svg>
+          </div>
+          <div class="label-zona" aria-hidden="true"><span>kurang</span><span>aman</span><span>terlalu tinggi</span></div>
+          <p class="peringatan" id="peringatan" hidden></p>
+        </div>
+        <div class="hud-mangkuk">
+          <small>Mangkuk tersisa</small>
+          <div id="hudMangkuk" aria-label="3 mangkuk tersisa"></div>
+          <button class="tbl-kecil" id="tblJeda" type="button">jeda</button>
+        </div>
+      </div>
+      <div class="jeda" id="layarJeda" hidden>
+        <h2 class="judul-sedang">Jeda</h2>
+        <button class="tbl tbl-kunyit" id="tblLanjut" type="button">Lanjut main</button>
+        <button class="tbl tbl-garis" id="tblKeMenu" type="button">Ke layar awal</button>
+      </div>
+      <p class="sr-only" id="pengumuman" aria-live="polite"></p>
+    </div>
+
+    <!-- 3. Layar selesai -->
+    <div class="layar layar-selesai" id="layarSelesai" hidden>
+      <div>
+        <h2 class="judul-sedang">Selesai</h2>
+        <p class="skor-besar" id="akhirSkor">0</p>
+        <p class="sub" id="akhirRekor">poin</p>
+        <ul class="ringkasan">
+          <li><svg viewBox="-34 -34 68 68" aria-hidden="true"><use href="#apel"/></svg><span id="akhirBaik">0 makanan sehat masuk piring</span></li>
+          <li><svg viewBox="-34 -34 68 68" aria-hidden="true"><use href="#donat"/></svg><span id="akhirManis">0 makanan manis ikut tertangkap</span></li>
+        </ul>
+        <div class="tbl-baris">
+          <button class="tbl tbl-kunyit" id="tblLagi" type="button">Main lagi</button>
+          <a class="tbl tbl-garis" href="index.html#cek">Cek risiko diabetes</a>
+        </div>
+        <p class="kecil">Game ini hanya untuk edukasi, bukan anjuran medis.</p>
+      </div>
+      <aside class="kertas" aria-labelledby="judulFakta">
+        <h3 id="judulFakta">Tahukah kamu?</h3>
+        <p id="faktaTeks"></p>
+        <div class="fakta-ikon" id="faktaIkon"></div>
+        <p class="sumber" id="faktaSumber"></p>
+        <button class="tbl-teks" id="tblFaktaLain" type="button">fakta lain</button>
+      </aside>
+    </div>
+  </section>
+
+  <p class="catatan">Game ini hanya untuk edukasi, bukan anjuran medis. HealthCheck merupakan alat skrining awal dan bukan pengganti diagnosis dokter.</p>
+</main>
+
+<!-- Gambar SVG semua makanan, piring, mangkuk, dan tetes (disalin dari desain_Game/mock2.html).
+     Dipakai ulang lewat <use href="#id"> di layar HTML dan diubah menjadi gambar untuk canvas oleh js/game.js. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<g id="apel"><circle cy="3" r="19" fill="#D63A2A"/><path d="M-9-5q3-5 8-3" stroke="#fff" stroke-opacity=".5" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M0-13q1-8 6-11" stroke="#12292A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M2-17q9-8 17-2-7 8-17 2z" fill="#4F9A45"/></g>
+<g id="wortel"><path d="M-11-14h22l-11 42z" fill="#EE7B22"/><path d="M-6-4h8M-3 6h7M-1 15h4" stroke="#B9570F" stroke-width="2" stroke-linecap="round"/><path d="M-5-14l-5-12M0-14v-14M5-14l5-12" stroke="#4F9A45" stroke-width="5" stroke-linecap="round"/></g>
+<g id="brokoli"><path d="M-6 8h12l3 18h-18z" fill="#9CCB6B"/><circle cx="-11" cy="0" r="11" fill="#2F7D3B"/><circle cx="11" cy="0" r="11" fill="#2F7D3B"/><circle cy="-8" r="13" fill="#3E9A4A"/><circle cx="-4" cy="-10" r="3" fill="#5DB766"/></g>
+<g id="bayam"><path d="M0 26v-18" stroke="#C9473E" stroke-width="5" stroke-linecap="round"/><ellipse cx="-11" cy="-4" rx="9" ry="16" transform="rotate(-25 -11 -4)" fill="#3E9A4A"/><ellipse cx="11" cy="-4" rx="9" ry="16" transform="rotate(25 11 -4)" fill="#2F7D3B"/><ellipse cy="-8" rx="9" ry="18" fill="#4FAE58"/><path d="M0 8V-20" stroke="#2F7D3B" stroke-width="1.5"/></g>
+<g id="tomat"><circle cy="3" r="19" fill="#E5432E"/><path d="M-10-12l6 4 4-8 4 8 6-4-4 8H-6z" fill="#3F8F3F"/><path d="M-10 2q2-5 6-6" stroke="#fff" stroke-opacity=".5" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+<g id="pepaya"><g transform="rotate(20)"><ellipse rx="14" ry="25" fill="#F28C28"/><ellipse rx="8" ry="17" fill="#E0661A"/><g fill="#12292A"><circle cx="-2" cy="-6" r="2.2"/><circle cx="3" cy="0" r="2.2"/><circle cx="-3" cy="5" r="2.2"/><circle cx="2" cy="-12" r="2.2"/><circle cx="1" cy="10" r="2.2"/></g></g></g>
+<g id="tempe"><rect x="-22" y="-14" width="44" height="28" rx="5" fill="#D9B77A"/><path d="M-22-5h44M-22 5h44" stroke="#B8955A" stroke-width="1.5"/><g fill="#7A5A2E"><circle cx="-12" cy="-10" r="1.7"/><circle cx="-2" cy="-9" r="1.7"/><circle cx="9" cy="-10" r="1.7"/><circle cx="-14" cy="0" r="1.7"/><circle cx="2" cy="1" r="1.7"/><circle cx="14" cy="0" r="1.7"/><circle cx="-6" cy="10" r="1.7"/><circle cx="8" cy="10" r="1.7"/></g></g>
+<g id="telur"><path d="M0-22c14 0 20 16 20 24a20 20 0 0 1-40 0c0-8 6-24 20-24z" fill="#FFFDF5" stroke="#CFC8B4" stroke-width="2"/><circle cy="6" r="9" fill="#F4B72A"/><circle cx="-3" cy="3" r="2.5" fill="#fff" fill-opacity=".6"/></g>
+<g id="ikan"><path d="M-24 0q12-18 30-14 10 4 14 14-4 10-14 14-18 4-30-14z" fill="#6FA8C9"/><path d="M20 0l12-12v24z" fill="#4F86A8"/><circle cx="-12" cy="-3" r="2.5" fill="#12292A"/><path d="M-2-10q4 10 0 20M6-9q4 9 0 18" stroke="#4F86A8" stroke-width="2" fill="none"/></g>
+<g id="air"><path d="M-14-22h28l-4 44h-20z" fill="#DDF1F7" stroke="#9CC9D8" stroke-width="2"/><path d="M-12-6h24l-2 26h-20z" fill="#7CC4DC"/><path d="M-8-18l2 30" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".8"/></g>
+<g id="esteh"><path d="M-14-20h28l-4 44h-20z" fill="#B5651D" stroke="#7A4310" stroke-width="2"/><rect x="-9" y="-14" width="9" height="9" rx="1.5" fill="#fff" fill-opacity=".75" transform="rotate(-10 -4 -10)"/><rect x="1" y="-10" width="9" height="9" rx="1.5" fill="#fff" fill-opacity=".75" transform="rotate(12 5 -6)"/><path d="M6-20l8-12" stroke="#D63A2A" stroke-width="3.5" stroke-linecap="round"/></g>
+<g id="donat"><path fill-rule="evenodd" d="M-20 0a20 20 0 1 0 40 0a20 20 0 1 0-40 0zM-6 0a6 6 0 1 1 12 0a6 6 0 1 1-12 0z" fill="#C98B4A"/><path fill-rule="evenodd" d="M-17 0a17 17 0 1 0 34 0a17 17 0 1 0-34 0zM-6 0a6 6 0 1 1 12 0a6 6 0 1 1-12 0z" fill="#F08FB0"/><path d="M-10-9l4 2M8-10l4 3M-12 7l4-2M9 8l3 3M0-14l1 4" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></g>
+<g id="kue"><rect x="-22" y="-4" width="44" height="22" rx="4" fill="#F3D9A4"/><rect x="-22" y="-12" width="44" height="10" rx="5" fill="#F08FB0"/><path d="M-22 8h44" stroke="#C99A55" stroke-width="2"/><circle cx="6" cy="-17" r="5" fill="#D63A2A"/><path d="M6-22q1-5 5-6" stroke="#12292A" stroke-width="1.8" fill="none"/></g>
+<g id="permen"><path d="M0 8v20" stroke="#D9C9A0" stroke-width="4" stroke-linecap="round"/><circle cy="-4" r="17" fill="#D63A2A"/><path d="M-10-4a10 10 0 1 1 10 10M-5-4a5 5 0 1 1 5 5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+<g id="sirup"><rect x="-10" y="-8" width="20" height="32" rx="5" fill="#D63A2A"/><rect x="-5" y="-20" width="10" height="14" fill="#D63A2A"/><rect x="-7" y="-26" width="14" height="7" rx="2" fill="#F4B72A"/><rect x="-10" y="4" width="20" height="10" fill="#FFFDF5"/><circle cy="9" r="2.5" fill="#D63A2A"/></g>
+<g id="piring"><ellipse cy="7" rx="62" ry="14" fill="#000" opacity=".22"/><ellipse rx="60" ry="13" fill="#FFFDF5"/><ellipse rx="60" ry="13" fill="none" stroke="#2C6FA8" stroke-width="4"/><ellipse cy="1" rx="42" ry="7" fill="#E6E2D0"/></g>
+<g id="mangkuk"><path d="M-12-4h24q0 14-12 14t-12-14z" fill="#FFFDF5" stroke="#2C6FA8" stroke-width="2.5" stroke-linejoin="round"/></g>
+<g id="tetes"><path d="M0-12q9 12 9 18a9 9 0 0 1-18 0q0-6 9-18z" fill="#F4B72A" stroke="#FFFDF5" stroke-width="2"/></g>
+<g id="frame"><rect x="3" y="3" width="694" height="434" rx="16" fill="#17504F" stroke="#FFFDF5" stroke-width="6"/><rect x="16" y="16" width="668" height="408" rx="8" fill="none" stroke="#FFFDF5" stroke-opacity=".4" stroke-width="1.5"/></g>
+<g id="rivets" fill="#FFFDF5"><circle cx="30" cy="30" r="3.5"/><circle cx="670" cy="30" r="3.5"/><circle cx="30" cy="410" r="3.5"/><circle cx="670" cy="410" r="3.5"/></g>
+</defs></svg>
+
+<script src="js/audio.js"></script>
+<script src="js/game.js"></script>
+</body></html>
